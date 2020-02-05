@@ -55,30 +55,37 @@
                     this.arrOrganism.push(new Particle(START_Y, START_X));
                 }
             }
-            
-            drawOutput() {
-                for (var i_part = 0; i_part < this.arrOrganism.size(); ++i_part) {
-                    /*dx = math.fabs(elem.x - START_X)
-                    dy = math.fabs(elem.y - START_Y)
-                    if (Math.sqrt(dx * dx + dy * dy) <= 5) {
-                        this.arrOrganism[i_part].food = 255;
-                    }*/
 
-                    // Draw particle
-                    // pygame.draw.circle(screen, (0 + elem.food, int(55 + elem.food/1.275), int(255 - elem.food/5.1)), (int(elem.x), int(elem.y)), 0, 0)
+
+            drawOutput() {
+                for (var i = 0; i < POINT_NUMBER; ++i) {
+                    point_data[i * 2] = model.arrOrganism[i].x / (SIZE_X / 2) - 1;
+                    point_data[i * 2 + 1] = model.arrOrganism[i].y / (SIZE_Y / 2) - 1;
                 }
+
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(point_data), gl.STATIC_DRAW);
+                gl.drawArrays(gl.POINTS, 0, POINT_NUMBER);
             }
-            
+
+
             locationUpdate() {
                 var del = []
                 for (var update = 0; update < this.arrOrganism.length; ++update) {
                     var elem = this.arrOrganism[update]
                     if (elem.y > 1 && elem.x > 1 && elem.x < SIZE_X - 1 && elem.y < SIZE_Y - 1) {
+                        if (elem.check_if_dead()) {
+                            // elem.x = 5;
+                            // elem.y = 5;
+                        } else {
+                            // elem.x = 5;
+                            // elem.y = 5;
+                        }
                         elem.move();
                         // elem.share();
                         var ans = elem.sence();
                         elem.rotate(ans[0], ans[1], ans[2]);
                         TrailMap[Math.round(elem.y)][Math.round(elem.x)] += 255;
+
                         /*if (FoodMap[Math.round(elem.y), Math.round(elem.x)] <= 10) {
                             FoodMap[Math.round(elem.y), Math.round(elem.x)] = 0;
                         } else {
@@ -91,11 +98,15 @@
                             elem.x = 0;
                             elem.y = 0;
                         }*/
+                    } else {
+                        elem.x = 0;
+                        elem.y = 0;
                     }
                 }
             }
         }
-        
+
+
         class Particle {
             constructor(y, x, heading = Math.random() * 360) {
                 this.SA = 45;
@@ -112,12 +123,27 @@
                 this.heading = heading;
             }
             
+            check_if_dead() {
+                for (var i = 0; i < model.arrOrganism.length; ++i) {
+                    var dx = Math.abs(model.arrOrganism[i].x - this.x);
+                    var dy = Math.abs(model.arrOrganism[i].y - this.y);
+                    var dxs = Math.abs(model.arrOrganism[i].x - this.x);
+                    var dys = Math.abs(model.arrOrganism[i].y - this.y);
+                    var len = Math.sqrt(dx * dx + dy * dy);
+                    var len_s = Math.sqrt(dx * dx + dy * dy);
+                    if (len < 30 && len != 0) {
+                         return false;
+                    }
+                }
+                return true;
+            }
+            
             share() {
                 // TODO
             }
             
             test(y, x) {
-                if (y >= 0 && x >= 0 && x < SIZE_X && y < SIZE_Y) { // TODO add right end
+                if (y >= 0 && x >= 0 && x < SIZE_X && y < SIZE_Y) {
                     if (FoodMap[y][x] > 20) {
                         var transaction = 20;
                     } else {
@@ -181,10 +207,10 @@
                         }
                     } else if (a >= b && a >= c) {
                         // turn left
-                        this.heading += this.RA
+                        this.heading += this.RA;
                     } else if (c >= b && c >= a) {
                         // turn right
-                        this.heading -= this.RA
+                        this.heading -= this.RA;
                     }
                 }
             }
@@ -320,23 +346,15 @@
             
             for (var y = 0; y < SIZE_Y; ++y) {
                 for (var x = 0; x < SIZE_X; ++x) {
-                    if (TrailMap[y][x] >= 20) {
-                        TrailMap[y][x] -= 20;
+                    if (TrailMap[y][x] >= 30) {
+                        TrailMap[y][x] -= 30;
                     } else {
                         TrailMap[y][x] = 0;
                     }
                 }
             }
             
-            
-            for (var i = 0; i < POINT_NUMBER; ++i) {
-                point_data[i * 2] = model.arrOrganism[i].x / (SIZE_X / 2) - 1;
-                point_data[i * 2 + 1] = model.arrOrganism[i].y / (SIZE_Y / 2) - 1;
-            }
-
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(point_data), gl.STATIC_DRAW);
-            gl.drawArrays(gl.POINTS, 0, POINT_NUMBER);
-            
+            model.drawOutput();
             for (var i = 0; i < ADD_LENGTH; ++i) {
                 model.arrOrganism.push(new Particle(START_Y, START_X));
                 POINT_NUMBER++;
