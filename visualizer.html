@@ -1,21 +1,7 @@
 <!DOCTYPE HTML>
 <html>
-    <head>
-        <style>
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0px;
-            border: 0;
-            overflow: hidden;
-            display: block;
-        }
-        </style>
-        <script type="text/javascript" src="stats.min.js"></script>
-    </head>
-
     <body>
-        <canvas id="my_canvas" width="1320" height="660">
+        <canvas id="my_canvas" width="600" height="400">
         Oops, your browser doesn't support html5 canvas!
         </canvas>
 
@@ -23,7 +9,7 @@
             attribute vec4 aPosition;
             void main () {
                 gl_Position = aPosition;
-                gl_PointSize = 2.0;
+                gl_PointSize = 5.0;
         }
         </script>
 
@@ -35,42 +21,129 @@
             }
         </script>
 
-        <script type="text/javascript">
-            var gl; // глобальная переменная для контекста WebGL
 
-            function start() {
-            var canvas = document.getElementById("glcanvas");
+        <script>
+            const http = require('http');
 
-            gl = initWebGL(canvas);      // инициализация контекста GL
+            const hostname = '127.0.0.1';
+            const port = 1303;
+
+            const server = http.createServer((req, res) => {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'text/plain');
+            res.end('Hello World');
+            });
+
+            server.listen(port, hostname, () => {
+            console.log(`Server running at http://${hostname}:${port}/`);
+            });
             
-            // продолжать только если WebGL доступен и работает
             
-                if (gl) {
-                    gl.clearColor(0.0, 0.0, 0.0, 1.0);                      // установить в качестве цвета очистки буфера цвета черный, полная непрозрачность
-                    gl.enable(gl.DEPTH_TEST);                               // включает использование буфера глубины
-                    gl.depthFunc(gl.LEQUAL);                                // определяет работу буфера глубины: более ближние объекты перекрывают дальние
-                    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);      // очистить буфер цвета и буфер глубины.
+            var canvas = document.getElementById('my_canvas');
+            var gl = canvas.getContext('webgl') ||
+                    canvas.getContext('experimental-webgl');
+            if (!gl) throw new Error('browser may not support webgl :(');
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            var vertShaderObj = gl.createShader(gl.VERTEX_SHADER);
+            var vertexShaderSrc = document.querySelector('[type="vertex"]').textContent;
+            var fragShaderObj = gl.createShader(gl.FRAGMENT_SHADER);
+            var fragmentShaderSrc = document.querySelector('[type="fragment"]').textContent;
+
+            /******/
+            function compile (gl, type, shaderSrc) {
+                var shader = gl.createShader(type);
+                gl.shaderSource(shader, shaderSrc);
+                gl.compileShader(shader);
+
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    throw new Error(gl.getShaderInfoLog(shader));
                 }
+
+                return shader;
+            };
+            /******/
+
+            var vertexShader = compile(gl, gl.VERTEX_SHADER, vertexShaderSrc);
+            var fragmentShader = compile(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
+
+            function link (gl, vertexShader, fragmentShader) {
+                var program = gl.createProgram();
+                gl.attachShader(program, vertexShader);
+                gl.attachShader(program, fragmentShader);
+                gl.linkProgram(program);
+
+                if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                    throw new Error(gl.getProgramInfoLog(program));
+                }
+
+                return program;
+            };
+            var program = link(gl, vertexShader, fragmentShader);
+            gl.useProgram(program);
+
+            var aPosition = gl.getAttribLocation(program, 'aPosition');
+            var uFragColor = gl.getUniformLocation(program, 'uFragColor');
+            var positionLocation = gl.getAttribLocation(program, "aPosition");
+            // var positionLocation = gl.getAttribLocation(program, "");
+            // var positionLocation = gl.getAttribLocation(program, "aClal");
+            
+            var point_data = [
+                -0.8, -0.0,
+                -0.4, 0.8,
+                -1.0, 1.0,
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 0.0];
+            
+            var buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(point_data), gl.STATIC_DRAW);
+
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+            //gl.vertexAttrib2f(aPosition, 0.0, 1.0);
+            gl.uniform4f(uFragColor, 1.0, 0.0, 0.0, 1.0);
+
+            // takes a mode, first, count
+            // gl.drawArrays(gl.POINTS, 0, 1);
+            // gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            // gl.clear(gl.COLOR_BUFFER_BIT);
+            
+            var delta = [];
+            delta.length = point_data.length;
+            for (var i = 0; i < delta.length; i+=2) {
+                delta[i] = Math.random() * 0.01;
+                delta[i+1] = Math.random() * 0.01;
             }
             
-            function initWebGL(canvas) {
-                gl = null;
-                
-                try {
-                    // Попытаться получить стандартный контекст. Если не получится, попробовать получить экспериментальный.
-                    gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+            let then = 0;
+            function render(now) {
+                now *= 0.001;  // convert to seconds
+                const deltaTime = now - then;   // deltaTime is now number of seconds since last frame
+                then = now;    // save the for the next frame
+
+                gl.uniform4f(uFragColor, Math.random(), Math.random(), Math.random(), 1.0);
+                for (var i = 0; i < point_data.length; i+=2) {
+                    point_data[i] += delta[i];
+                    point_data[i+1] += delta[i+1];
+                    if (point_data[i] < -1 || point_data[i] > 1) {
+                        delta[i] = delta[i] * -1;
+                    }
+                    if (point_data[i+1] < -1 || point_data[i+1] > 1) {
+                        delta[i+1] = delta[i+1] * -1;
+                    }
                 }
-                catch(e) {}
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(point_data), gl.STATIC_DRAW);
+                gl.drawArrays(gl.POINTS, 0, 6);
                 
-                // Если мы не получили контекст GL, завершить работу
-                if (!gl) {
-                    alert("Unable to initialize WebGL. Your browser may not support it :(");
-                    gl = null;
-                }
-                return gl;
+                // now loop by calling requestAnimationFrame to call this function again
+                requestAnimationFrame(render);
             }
+            requestAnimationFrame(render);
             
-            gl.viewport(0, 0, canvas.width, canvas.height);
         </script>
     </body>
 </html>
