@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            border: 0;
+            overflow: hidden;
+            display: block;
+        }
+        </style>
+        <script type="text/javascript" src="stats.min.js"></script>
+    </head>
+
+    <body>
+        <canvas id="my_canvas" width="1320" height="660">
+        Oops, your browser doesn't support html5 canvas!
+        </canvas>
+
+        <script type="vertex">
+            attribute vec4 aPosition;
+            void main () {
+                gl_Position = aPosition;
+                gl_PointSize = 2.0;
+        }
+        </script>
+
+        <script type="fragment">
+            precision mediump float;
+            uniform vec4 uFragColor;
+            void main () {
+                gl_FragColor = uFragColor;
+            }
+        </script>
+
+        <script type="text/javascript">
+            
+        </script>
+    </body>
+</html>
