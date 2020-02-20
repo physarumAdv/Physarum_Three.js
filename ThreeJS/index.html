@@ -37,9 +37,14 @@
 			var geometry = new THREE.BoxGeometry(1, 1, 1);
 
 			// create a material, color or image tex ture
-			var material = new THREE.MeshBasicMaterial({color: 0xFFFFFF, wireframe: true});
+			var material = new THREE.MeshBasicMaterial({color: 0xffff00, wireframe: true});
 			var cube = new THREE.Mesh(geometry, material);
 			scene.add(cube);
+
+			var geometry = new THREE.SphereGeometry( 0.1, 32, 32 );
+			var material = new THREE.MeshBasicMaterial({color: 0xffff00, wireframe: true});
+			var points = new THREE.Mesh(geometry, material);
+			scene.add(points);
 
 			camera.position.z = 3;
 
