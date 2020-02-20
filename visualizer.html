@@ -23,7 +23,7 @@
 
 
         <script>
-            const http = require('http');
+            /*const http = require('http');
 
             const hostname = '127.0.0.1';
             const port = 1303;
@@ -36,9 +36,55 @@
 
             server.listen(port, hostname, () => {
             console.log(`Server running at http://${hostname}:${port}/`);
-            });
-            
-            
+            });*/
+
+            var vertices = [
+              // Передняя грань
+              -1.0, -1.0,  1.0,
+               1.0, -1.0,  1.0,
+               1.0,  1.0,  1.0,
+              -1.0,  1.0,  1.0,
+              
+              // Задняя грань
+              -1.0, -1.0, -1.0,
+              -1.0,  1.0, -1.0,
+               1.0,  1.0, -1.0,
+               1.0, -1.0, -1.0,
+              
+              // Верхняя грань
+              -1.0,  1.0, -1.0,
+              -1.0,  1.0,  1.0,
+               1.0,  1.0,  1.0,
+               1.0,  1.0, -1.0,
+              
+              // Нижняя грань
+              -1.0, -1.0, -1.0,
+               1.0, -1.0, -1.0,
+               1.0, -1.0,  1.0,
+              -1.0, -1.0,  1.0,
+              
+              // Правая грань
+               1.0, -1.0, -1.0,
+               1.0,  1.0, -1.0,
+               1.0,  1.0,  1.0,
+               1.0, -1.0,  1.0,
+              
+              // Левая грань
+              -1.0, -1.0, -1.0,
+              -1.0, -1.0,  1.0,
+              -1.0,  1.0,  1.0,
+              -1.0,  1.0, -1.0
+            ];
+
+            var colors = [
+              [1.0,  1.0,  1.0,  1.0],    // Front face: white
+              [1.0,  0.0,  0.0,  1.0],    // Back face: red
+              [0.0,  1.0,  0.0,  1.0],    // Top face: green
+              [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+              [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+              [1.0,  0.0,  1.0,  1.0]     // Left face: purple
+            ];
+
             var canvas = document.getElementById('my_canvas');
             var gl = canvas.getContext('webgl') ||
                     canvas.getContext('experimental-webgl');
@@ -80,6 +126,7 @@
 
                 return program;
             };
+
             var program = link(gl, vertexShader, fragmentShader);
             gl.useProgram(program);
 
@@ -89,6 +136,16 @@
             // var positionLocation = gl.getAttribLocation(program, "");
             // var positionLocation = gl.getAttribLocation(program, "aClal");
             
+            // perspectiveMatrix = makePerspective(45, 640.0/480.0, 0.1, 100.0);
+
+            function setMatrixUniforms() {
+                var pUniform = gl.getUniformLocation(program, "uPMatrix");
+                gl.uniformMatrix4fv(pUniform, false, new Float32Array(perspectiveMatrix.flatten()));
+
+                var mvUniform = gl.getUniformLocation(program, "uMVMatrix");
+                gl.uniformMatrix4fv(mvUniform, false, new Float32Array(mvMatrix.flatten()));
+            }
+
             var point_data = [
                 -0.8, -0.0,
                 -0.4, 0.8,
@@ -96,10 +153,46 @@
                 -1.0, -1.0,
                 1.0, -1.0,
                 1.0, 0.0];
+
+
+            var generatedColors = [];
+
+            for (j=0; j<6; j++) {
+                var c = colors[j];
+              
+                for (var i=0; i<4; i++) {
+                    generatedColors = generatedColors.concat(c);
+                }
+            }
+
+            cubeVerticesColorBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, cubeVerticesColorBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(generatedColors), gl.STATIC_DRAW);
             
-            var buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(point_data), gl.STATIC_DRAW);
+            cubeVerticesIndexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVerticesIndexBuffer);
+
+            // Этот массив определяет каждую грань как два треугольника,
+            // используя индексы в массиве вершин, чтобы определить позицию
+            // каждого треугольника.
+
+            var cubeVertexIndices = [
+                0,  1,  2,      0,  2,  3,    // front
+                4,  5,  6,      4,  6,  7,    // back
+                8,  9,  10,     8,  10, 11,   // top
+                12, 13, 14,     12, 14, 15,   // bottom
+                16, 17, 18,     16, 18, 19,   // right
+                20, 21, 22,     20, 22, 23    // left
+            ];
+
+            // Теперь отправим массив элементов в GL
+
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+
+
+            // var buffer = gl.createBuffer();
+            // gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(point_data), gl.STATIC_DRAW);
 
             gl.enableVertexAttribArray(positionLocation);
             gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
@@ -111,7 +204,7 @@
             // gl.drawArrays(gl.POINTS, 0, 1);
             // gl.clearColor(0.0, 0.0, 0.0, 1.0);
             // gl.clear(gl.COLOR_BUFFER_BIT);
-            
+
             var delta = [];
             delta.length = point_data.length;
             for (var i = 0; i < delta.length; i+=2) {
@@ -138,7 +231,13 @@
                 }
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(point_data), gl.STATIC_DRAW);
                 gl.drawArrays(gl.POINTS, 0, 6);
-                
+
+                // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+                // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVerticesIndexBuffer);
+                // setMatrixUniforms();
+                // gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
+
+                // mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * .7, [0, 1, 0]);
                 // now loop by calling requestAnimationFrame to call this function again
                 requestAnimationFrame(render);
             }

@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Three.js</title>
+
+
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100%; };
+		</style>
+	</head>
+
+	<body>
+		<script src="js/three.js"></script>
+
+		<script>
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild(renderer.domElement);
+
+			// crate the shape
+			var geometry = new THREE.BoxGeometry(1, 1, 1);
+
+			// create a material, color or image tex ture
+			var material = new THREE.MeshBasicMaterial({color: 0xFFFFFF, wireframe: false});
+			var cube = new THREE.Mesh(geometry, material);
+			scene.add(cube);
+
+			camera.position.z = 3;
+			camera.position.x = 1;
+
+			// game logic
+			var update = function() {
+
+			};
+
+			// draw scene
+			var render = function() {
+				renderer.render(scene, camera);
+			};
+
+			// run game loop (update, render, repeat)
+			var GameLoop = function() {
+				requestAnimationFrame(GameLoop);
+
+				update();
+				render();
+			};
+
+			GameLoop();
+		</script>
+	</body>
+</html>
