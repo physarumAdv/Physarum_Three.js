@@ -17,7 +17,7 @@
         <script>
             function httpGet(theUrl, frameId) {
                 var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open("GET", theUrl + '?frame_id=' + frameId, true); // true for asynchronous request
+                xmlHttp.open("GET", theUrl + '?frame_id=' + frameId, false); // false for synchronous request
                 xmlHttp.send(null);
                 return JSON.parse(xmlHttp.responseText);
             }
