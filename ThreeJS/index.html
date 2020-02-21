@@ -51,7 +51,7 @@
 			scene.add(cube);
 
 			var geometry = new THREE.SphereGeometry(0.1, 5, 5);
-			var material = new THREE.MeshBasicMaterial({color: 0xFFFF00, wireframe: true});
+			var material = new THREE.MeshBasicMaterial({color: 0x0000FF, wireframe: true});
 			var points = new THREE.Mesh(geometry, material);
 			points.position.x = 0.5
 			scene.add(points);
@@ -59,8 +59,14 @@
 			camera.position.z = 3;
 
 
-			var ambientLight = new THREE.AmbientLight(0xFFFFFF, 1.5);
+			var ambientLight = new THREE.AmbientLight(0xFFFFFF, 1);
 			scene.add(ambientLight);
+
+			var light1 = new THREE.PointLight(0xFFFFFF, 1, 500);
+			light1.position.x = 3;
+			light1.position.y = 1;
+			light1.position.z = 2;
+			scene.add(light1);
 
 			// game logic
 			var update = function() {
