@@ -37,12 +37,12 @@
 			var geometry = new THREE.BoxGeometry(1, 1, 1);
 			var path = 'https://sc01.alicdn.com/kf/HTB1oqIOXPzuK1RjSspeq6ziHVXau/Decorative-rigid-PVC-wood-texture-film-for.jpg';
 			var cubeMaterials = [
-				new THREE.MeshBasicMaterial({color: 0xFF0000, side: THREE.DoubleSide}), // RIGHT SIDE
-				new THREE.MeshBasicMaterial({color: 0x0000FF, side: THREE.DoubleSide}), // LEFT SIDE
-				new THREE.MeshBasicMaterial({color: 0x008000, side: THREE.DoubleSide}), // TOP SIDE
-				new THREE.MeshBasicMaterial({color: 0xFFFF00, side: THREE.DoubleSide}), // BOTTOM SIDE
-				new THREE.MeshBasicMaterial({color: 0x800080, side: THREE.DoubleSide}), // FRONT SIDE
-				new THREE.MeshBasicMaterial({color: 0xFFA500, side: THREE.DoubleSide})  // BACK SIDE
+				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
+				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // LEFT SIDE
+				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // TOP SIDE
+				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // BOTTOM SIDE
+				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // FRONT SIDE
+				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide})  // BACK SIDE
 			];
 
 			// create a material, color or image texture
@@ -50,13 +50,17 @@
 			var cube = new THREE.Mesh(geometry, material);
 			scene.add(cube);
 
-			/*var geometry = new THREE.SphereGeometry(0.1, 5, 5);
+			var geometry = new THREE.SphereGeometry(0.1, 5, 5);
 			var material = new THREE.MeshBasicMaterial({color: 0xFFFF00, wireframe: true});
 			var points = new THREE.Mesh(geometry, material);
 			points.position.x = 0.5
-			scene.add(points);*/
+			scene.add(points);
 
 			camera.position.z = 3;
+
+
+			var ambientLight = new THREE.AmbientLight(0xFFFFFF, 1.5);
+			scene.add(ambientLight);
 
 			// game logic
 			var update = function() {
