@@ -1,93 +1,113 @@
 <!DOCTYPE HTML>
 <html>
-	<head>
-		<title>Three.js</title>
+    <head>
+        <title>Three.js</title>
 
 
-		<style>
-			body { margin: 0; }
-			canvas { width: 100%; height: 100%; };
-		</style>
-	</head>
+        <style>
+            body { margin: 0; }
+            canvas { width: 100%; height: 100%; };
+        </style>
+    </head>
 
-	<body>
-		<script src="js/three.js"></script>
-		<script src="js/OrbitControls.js"></script>
+    <body>
+        <script src="js/three.js"></script>
+        <script src="js/OrbitControls.js"></script>
 
-		<script>
-			var scene = new THREE.Scene();
-			var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        <script>
+            var scene = new THREE.Scene();
+            var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-			var renderer = new THREE.WebGLRenderer();
-			renderer.setSize(window.innerWidth, window.innerHeight);
-			document.body.appendChild(renderer.domElement);
+            var renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
 
-			window.addEventListener('resize', function() {
-				var width = window.innerWidth;
-				var height = window.innerHeight;
-				renderer.setSize(width, height);
-				camera.aspect = width / height;
-				camera.updateProjectionMatrix();
-			});
-
-
-			controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-			// create the shape
-			var geometry = new THREE.BoxGeometry(1, 1, 1);
-			var path = 'https://sc01.alicdn.com/kf/HTB1oqIOXPzuK1RjSspeq6ziHVXau/Decorative-rigid-PVC-wood-texture-film-for.jpg';
-			var cubeMaterials = [
-				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
-				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // LEFT SIDE
-				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // TOP SIDE
-				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // BOTTOM SIDE
-				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // FRONT SIDE
-				new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide})  // BACK SIDE
-			];
-
-			// create a material, color or image texture
-			var material = new THREE.MeshFaceMaterial(cubeMaterials);
-			var cube = new THREE.Mesh(geometry, material);
-			scene.add(cube);
-
-			var geometry = new THREE.SphereGeometry(0.1, 5, 5);
-			var material = new THREE.MeshBasicMaterial({color: 0x0000FF, wireframe: true});
-			var points = new THREE.Mesh(geometry, material);
-			points.position.x = 0.5
-			scene.add(points);
-
-			camera.position.z = 3;
+            window.addEventListener('resize', function() {
+                var width = window.innerWidth;
+                var height = window.innerHeight;
+                renderer.setSize(width, height);
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+            });
 
 
-			var ambientLight = new THREE.AmbientLight(0xFFFFFF, 1);
-			scene.add(ambientLight);
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-			var light1 = new THREE.PointLight(0xFFFFFF, 1, 500);
-			light1.position.x = 3;
-			light1.position.y = 1;
-			light1.position.z = 2;
-			scene.add(light1);
+            // create the shape
+            var geometry = new THREE.BoxGeometry(1, 1, 1);
+            // var path = 'https://sc01.alicdn.com/kf/HTB1oqIOXPzuK1RjSspeq6ziHVXau/Decorative-rigid-PVC-wood-texture-film-for.jpg';
+            var path = 'https://3docean.img.customer.envatousercontent.com/files/236653866/Featured.jpg?auto=compress%2Cformat&fit=crop&crop=top&w=590&h=590&s=321582fa8635db81a9818e57a69fd28e';
+            var cubeMaterials = [
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // LEFT SIDE
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // TOP SIDE
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // BOTTOM SIDE
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // FRONT SIDE
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide})  // BACK SIDE
+            ];
 
-			// game logic
-			var update = function() {
-				// cube.rotation.x += 0.01;
-				// cube.rotation.y += 0.005;
-			};
+            // create a material, color or image texture
+            var material = new THREE.MeshFaceMaterial(cubeMaterials);
+            var cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
 
-			// draw scene
-			var render = function() {
-				renderer.render(scene, camera);
-			};
 
-			// run game loop (update, render, repeat)
-			var GameLoop = function() {
-				requestAnimationFrame(GameLoop);
+            var frame = {
+                "x": [1, 2, 3],
+                "y": [4, 5, 6],
+                "z": [7, 8, 9]
+            };
 
-				update();
-				render();
-			};
+            var geometry = new THREE.SphereGeometry(0.1, 1, 1);
+            var material = new THREE.MeshBasicMaterial({color: 0xFFFF00, wireframe: false});
+            for (var i = 0; i < 3; ++i) {
+                var point = new THREE.Mesh(geometry, material);
+                point.position.x = frame["x"][i];
+                point.position.y = frame["y"][i];
+                point.position.z = frame["z"][i];
+                scene.add(point);
+            }
 
-			GameLoop();
-		</script>
-	</body>
+            var dotGeometry = new THREE.Geometry();
+            dotGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+            var dotMaterial = new THREE.PointsMaterial({size: 1, sizeAttenuation: false});
+            var dot = new THREE.Points(dotGeometry, dotMaterial);
+            scene.add(dot);
+
+
+            camera.position.z = 3;
+
+
+            var ambientLight = new THREE.AmbientLight(0xFFFFFF, 1);
+            scene.add(ambientLight);
+
+            var light1 = new THREE.PointLight(0xFFFFFF, 1, 500);
+            light1.position.x = 3;
+            light1.position.y = 1;
+            light1.position.z = 2;
+            // scene.add(light1);
+
+
+            // game logic
+            var update = function() {
+                // cube.rotation.x += 0.01;
+                // cube.rotation.y += 0.005;
+            };
+
+            // draw scene
+            var render = function() {
+                renderer.render(scene, camera);
+            };
+
+            // run game loop (update, render, repeat)
+            var GameLoop = function() {
+                requestAnimationFrame(GameLoop);
+
+                update();
+                render();
+            };
+
+            GameLoop();
+        </script>
+    </body>
 </html>
