@@ -33,11 +33,20 @@
 
 			controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-			// crate the shape
+			// create the shape
 			var geometry = new THREE.BoxGeometry(1, 1, 1);
+			var path = 'https://sc01.alicdn.com/kf/HTB1oqIOXPzuK1RjSspeq6ziHVXau/Decorative-rigid-PVC-wood-texture-film-for.jpg';
+			var cubeMaterials = [
+				new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
+				new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // LEFT SIDE
+				new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // TOP SIDE
+				new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // BOTTOM SIDE
+				new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // FRONT SIDE
+				new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide})  // BACK SIDE
+			];
 
-			// create a material, color or image tex ture
-			var material = new THREE.MeshBasicMaterial({color: 0x0000FF, wireframe: true});
+			// create a material, color or image texture
+			var material = new THREE.MeshFaceMaterial(cubeMaterials);
 			var cube = new THREE.Mesh(geometry, material);
 			scene.add(cube);
 
