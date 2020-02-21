@@ -15,6 +15,28 @@
         <script src="js/OrbitControls.js"></script>
 
         <script>
+            function httpGet(theUrl, frameId) {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("GET", theUrl + '?frame_id=' + frameId, true); // true for asynchronous request
+                xmlHttp.send(null);
+                return JSON.parse(xmlHttp.responseText);
+            }
+
+            function renderPoints(frame, scene) {
+                var geometry = new THREE.SphereGeometry(0.1, 1, 1);
+                var material = new THREE.MeshBasicMaterial({color: 0xFFFF00, wireframe: false});
+                for (var i = 0; i < frame; ++i) {
+                    var point = new THREE.Mesh(geometry, material);
+                    point.position.x = frame["x"][i];
+                    point.position.y = frame["y"][i];
+                    point.position.z = frame["z"][i];
+                    scene.add(point);
+                }
+                return scene;
+            }
+        </script>
+
+        <script>
             var scene = new THREE.Scene();
             var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -35,7 +57,6 @@
 
             // create the shape
             var geometry = new THREE.BoxGeometry(1, 1, 1);
-            // var path = 'https://sc01.alicdn.com/kf/HTB1oqIOXPzuK1RjSspeq6ziHVXau/Decorative-rigid-PVC-wood-texture-film-for.jpg';
             var path = 'https://3docean.img.customer.envatousercontent.com/files/236653866/Featured.jpg?auto=compress%2Cformat&fit=crop&crop=top&w=590&h=590&s=321582fa8635db81a9818e57a69fd28e';
             var cubeMaterials = [
                 new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
@@ -51,47 +72,31 @@
             var cube = new THREE.Mesh(geometry, material);
             scene.add(cube);
 
-
-            var frame = {
-                "x": [1, 2, 3],
-                "y": [4, 5, 6],
-                "z": [7, 8, 9]
-            };
-
-            var geometry = new THREE.SphereGeometry(0.1, 1, 1);
-            var material = new THREE.MeshBasicMaterial({color: 0xFFFF00, wireframe: false});
-            for (var i = 0; i < 3; ++i) {
-                var point = new THREE.Mesh(geometry, material);
-                point.position.x = frame["x"][i];
-                point.position.y = frame["y"][i];
-                point.position.z = frame["z"][i];
-                scene.add(point);
-            }
-
-            var dotGeometry = new THREE.Geometry();
-            dotGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-            var dotMaterial = new THREE.PointsMaterial({size: 1, sizeAttenuation: false});
-            var dot = new THREE.Points(dotGeometry, dotMaterial);
-            scene.add(dot);
-
-
             camera.position.z = 3;
 
 
+            // light
             var ambientLight = new THREE.AmbientLight(0xFFFFFF, 1);
             scene.add(ambientLight);
 
-            var light1 = new THREE.PointLight(0xFFFFFF, 1, 500);
+            var light1 = new THREE.PointLight(0xFFFFFF, 0.5, 500);
             light1.position.x = 3;
-            light1.position.y = 1;
+            light1.position.y = 2;
             light1.position.z = 2;
-            // scene.add(light1);
+            scene.add(light1);
 
+            var geometry = new THREE.SphereGeometry(0.1, 5, 5);
+            var material = new THREE.MeshBasicMaterial({color: 0x0000FF, wireframe: true});
+            var point = new THREE.Mesh(geometry, material);
+            point.position.x = 3;
+            point.position.y = 2;
+            point.position.z = 2;
+            scene.add(point);
 
             // game logic
             var update = function() {
-                // cube.rotation.x += 0.01;
-                // cube.rotation.y += 0.005;
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.005;
             };
 
             // draw scene
@@ -100,8 +105,12 @@
             };
 
             // run game loop (update, render, repeat)
+            var frameId = 0;
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
+                frame = httpGet('http://www.google.ru', frameId);
+                scene = renderPoints(frame, scene);
+                frameId ++;
 
                 update();
                 render();
