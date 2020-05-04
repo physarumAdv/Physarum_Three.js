@@ -13,8 +13,6 @@ function index(req, res) {
     fs.readFile(filePath, {encoding: 'utf-8'}, function(err, data) {
         if (!err) {
             res.writeHead(200, {'Content-Type': 'text/html'});
-            console.log(data);
-            console.log(data);
             res.end(data);
         } else {
             console.log(err);
@@ -31,7 +29,6 @@ function addFrame(req, res) {
     });
 
     req.on('end', function() {
-        console.log(body);
         Data = JSON.parse(body);
         res.end(JSON.stringify({'ok': true}));
     });
