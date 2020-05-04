@@ -2,12 +2,15 @@ const http = require('http');
 const urlapi = require('url');
 const fs = require('fs');
 const path = require('path');
-const filePath = path.join(__dirname, 'physarum_ThreeJS.html');
+const nStatic = require('node-static');
 
-var Data = []
+const filePath = path.join(__dirname, 'physarum_ThreeJS.html');
+var jsFolderFileServer = new nStatic.Server(path.join(__dirname, 'js'));
+
+var Data = [];
 
 function index(req, res) {
-    fs.readFile(filePath, {encoding: 'utf-8'}, function(err, data){
+    fs.readFile(filePath, {encoding: 'utf-8'}, function(err, data) {
         if (!err) {
             res.writeHead(200, {'Content-Type': 'text/html'});
             console.log(data);
@@ -47,15 +50,20 @@ function error404(req, res) {
 function main(req, res) {
     var url = urlapi.parse(req.url);
 
-    switch(url.pathname) {
-        case '/':
+    var pathname = url.pathname;
+
+    switch(true) {
+        case pathname === '/':
             index(req, res);
             break;
-        case '/add_frame':
+        case pathname === '/add_frame':
             addFrame(req, res);
             break;
-        case '/get_frame':
+        case pathname === '/get_frame':
             getFrame(req, res);
+            break;
+        case pathname.startsWith('/js'):
+            jsFolderFileServer.serve(req, res);
             break;
         default:
             error404(req, res);
