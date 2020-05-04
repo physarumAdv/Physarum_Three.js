@@ -13,16 +13,20 @@
     <body>
         <script src="js/three.js"></script>
         <script src="js/OrbitControls.js"></script>
+        <script type="text/javascript" src="js/stats.min.js"></script>
 
         <script>
-            function httpGet(theUrl, frameId) {
+            function httpGet(theUrl) {
                 var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open("GET", theUrl + '?frame_id=' + frameId, false); // false for synchronous request
+                xmlHttp.open("GET", theUrl, false); // false for synchronous request
                 xmlHttp.send(null);
                 return JSON.parse(xmlHttp.responseText);
             }
 
             function renderPoints(frame, scene) {
+                /*
+                Given points coordiates (frame) and scene, adds all particles to a scene                
+                */
                 var geometry = new THREE.SphereGeometry(0.1, 1, 1);
                 var material = new THREE.MeshBasicMaterial({color: 0xFFFF00, wireframe: false});
                 for (var i = 0; i < frame; ++i) {
@@ -51,6 +55,23 @@
                 camera.aspect = width / height;
                 camera.updateProjectionMatrix();
             });
+
+            document.addEventListener('keydown', onDocumentKeyDown, false);
+            function onDocumentKeyDown(event) {
+                var keyCode = event.which;
+                console.log(keyCode);
+                if (keyCode == 87) {
+                    cube.position.y += 1;
+                } else if (keyCode == 83) {
+                    cube.position.y -= 1;
+                } else if (keyCode == 65) {
+                    cube.position.x -= 1;
+                } else if (keyCode == 68) {
+                    cube.position.x += 1;
+                } else if (keyCode == 32) {
+                    cube.position.set(0, 0, 0);
+                }
+            };
 
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -95,8 +116,8 @@
 
             // game logic
             var update = function() {
-                cube.rotation.x += 0.01;
-                cube.rotation.y += 0.005;
+                // cube.rotation.x += 0.01;
+                // cube.rotation.y += 0.005;
             };
 
             // draw scene
@@ -108,15 +129,28 @@
             var frameId = 0;
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
-                frame = httpGet('http://www.google.ru', frameId);
-                scene = renderPoints(frame, scene);
                 frameId ++;
+
+                var data = httpGet("http://localhost:8080/get_frame");
+                renderPoints(data, scene);
 
                 update();
                 render();
             };
 
             GameLoop();
+            function initStats() {
+                var stats = new Stats();
+                stats.setMode(0); // 0: fps, 1: ms
+
+                // Align top-left
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+
+                document.body.appendChild( stats.dom );
+                return stats;
+            }
         </script>
     </body>
 </html>
