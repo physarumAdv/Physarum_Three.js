@@ -27,9 +27,9 @@
                 /*
                 Given points coordiates (frame) and scene, adds all particles to a scene                
                 */
-                var geometry = new THREE.SphereGeometry(0.1, 1, 1);
+                var geometry = new THREE.SphereGeometry(0.01, 1, 1);
                 var material = new THREE.MeshBasicMaterial({color: 0xFFFF00, wireframe: false});
-                for (var i = 0; i < frame; ++i) {
+                for (var i = 0; i < frame["x"].length; ++i) {
                     var point = new THREE.Mesh(geometry, material);
                     point.position.x = frame["x"][i];
                     point.position.y = frame["y"][i];
