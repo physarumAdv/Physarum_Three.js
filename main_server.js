@@ -60,7 +60,7 @@ function main(req, res) {
             getFrame(req, res);
             break;
         case pathname.startsWith('/js/'):
-            url.pathname = url.pathname.slice(4);
+            req.url = req.url.replace('/js/', '/');
             jsFolderFileServer.serve(req, res);
             break;
         default:
