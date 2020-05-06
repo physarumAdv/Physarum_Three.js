@@ -59,7 +59,8 @@ function main(req, res) {
         case pathname === '/get_frame':
             getFrame(req, res);
             break;
-        case pathname.startsWith('/js'):
+        case pathname.startsWith('/js/'):
+            url.pathname = url.pathname.slice(4);
             jsFolderFileServer.serve(req, res);
             break;
         default:
