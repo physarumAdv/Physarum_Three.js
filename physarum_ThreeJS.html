@@ -11,11 +11,19 @@
     </head>
 
     <body>
-        <script src="js/three.js"></script>
-        <script src="js/OrbitControls.js"></script>
-        <script type="text/javascript" src="js/stats.min.js"></script>
+        <script src="build/stats.min.js"></script>
+        <script src="build/dat.gui.min.js"></script>
 
-        <script>
+
+        <script type="module">
+            import * as THREE from "./build/three.module.js";
+
+            import { OrbitControls } from './build/OrbitControls.js';
+            import { GLTFLoader } from './build/GLTFLoader.js';
+            import { RGBELoader } from './build/RGBELoader.js';
+            import { RoughnessMipmapper } from './build/RoughnessMipmapper.js';
+
+
             function httpGet(theUrl) {
                 var xmlHttp = new XMLHttpRequest();
                 xmlHttp.open("GET", theUrl, false); // false for synchronous request
@@ -25,7 +33,7 @@
 
             function renderPoints(frame, scene) {
                 /*
-                Given points coordiates (frame) and scene, adds all particles to a scene                
+                Given points coordiates (frame) and scene, adds all particles to a scene
                 */
                 var geometry = new THREE.SphereGeometry(0.01, 1, 1);
                 var material = new THREE.MeshBasicMaterial({color: 0xFFFF00, wireframe: false});
@@ -38,12 +46,12 @@
                 }
                 return scene;
             }
-        </script>
 
-        <script>
+
             var scene = new THREE.Scene();
             var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
+            var stats = initStats();
+            
             var renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
@@ -73,8 +81,41 @@
                 }
             };
 
+            new RGBELoader()
+                .setDataType( THREE.UnsignedByteType )
+                .setPath( 'models/' )
+                .load( 'royal_esplanade_1k.hdr', function ( texture ) {
 
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
+                    var envMap = pmremGenerator.fromEquirectangular( texture ).texture;
+
+                    scene.background = envMap;
+                    scene.environment = envMap;
+
+                    texture.dispose();
+                    pmremGenerator.dispose();
+
+                    render();
+
+                    var roughnessMipmapper = new RoughnessMipmapper( renderer );
+
+                    var loader = new GLTFLoader().setPath( 'models/' );
+                    loader.load('cobra.gltf', function (gltf) {
+                        gltf.scene.traverse(function(child) {
+                            if (child.isMesh) {
+                                roughnessMipmapper.generateMipmaps(child.material);
+                            }
+                        });
+
+                        window.player1 = new Player([0, 0, 0], 0.1, 0, gltf.scene);
+                        scene.add(player1.body);
+                        //window.player1.update();
+
+                        roughnessMipmapper.dispose();
+                        render();
+                    });
+                });
+
+            var controls = new OrbitControls(camera, renderer.domElement);
 
             // create the shape
             var geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -126,16 +167,16 @@
             };
 
             // run game loop (update, render, repeat)
-            var frameId = 0;
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
-                frameId ++;
+                stats.begin();
 
                 var data = httpGet("http://localhost:8080/get_frame");
                 renderPoints(data, scene);
 
                 update();
                 render();
+                stats.end();
             };
 
             GameLoop();

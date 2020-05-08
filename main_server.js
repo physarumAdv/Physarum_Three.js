@@ -5,7 +5,7 @@ const path = require('path');
 const nStatic = require('node-static');
 
 const filePath = path.join(__dirname, 'physarum_ThreeJS.html');
-var jsFolderFileServer = new nStatic.Server(path.join(__dirname, 'js'));
+var jsFolderFileServer = new nStatic.Server(path.join(__dirname, 'build'));
 
 var Data = [];
 
@@ -59,8 +59,8 @@ function main(req, res) {
         case pathname === '/get_frame':
             getFrame(req, res);
             break;
-        case pathname.startsWith('/js/'):
-            req.url = req.url.replace('/js/', '/');
+        case pathname.startsWith('/build/'):
+            req.url = req.url.replace('/build/', '/');
             jsFolderFileServer.serve(req, res);
             break;
         default:
