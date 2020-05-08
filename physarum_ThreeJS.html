@@ -51,10 +51,12 @@
             var scene = new THREE.Scene();
             var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             var stats = initStats();
-            
+
             var renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
+            var pmremGenerator = new THREE.PMREMGenerator( renderer );
+            pmremGenerator.compileEquirectangularShader();
 
             window.addEventListener('resize', function() {
                 var width = window.innerWidth;
@@ -83,7 +85,7 @@
 
             new RGBELoader()
                 .setDataType( THREE.UnsignedByteType )
-                .setPath( 'models/' )
+                .setPath( 'build/models/' )
                 .load( 'royal_esplanade_1k.hdr', function ( texture ) {
 
                     var envMap = pmremGenerator.fromEquirectangular( texture ).texture;
