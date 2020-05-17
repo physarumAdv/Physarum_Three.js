@@ -8,6 +8,7 @@ const filePath = path.join(__dirname, 'physarum_ThreeJS.html');
 var jsFolderFileServer = new nStatic.Server(path.join(__dirname, 'build'));
 
 var Data = [];
+var NewFrame = false;
 
 function index(req, res) {
     fs.readFile(filePath, {encoding: 'utf-8'}, function(err, data) {
@@ -58,6 +59,9 @@ function main(req, res) {
             break;
         case pathname === '/get_frame':
             getFrame(req, res);
+            break;
+        case pathname === '/get_status':
+            getStatus(req, res);
             break;
         case pathname.startsWith('/build/'):
             req.url = req.url.replace('/build/', '/');

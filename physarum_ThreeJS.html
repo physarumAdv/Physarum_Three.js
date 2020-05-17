@@ -6,7 +6,7 @@
 
         <style>
             body { margin: 0; }
-            canvas { width: 100%; height: 100%; };
+            canvas { width: 100%; height: 100%; }
         </style>
     </head>
 
@@ -25,44 +25,51 @@
 
 
             const FizzyText = function () {
-                this.message = 'hey';
+                this.particles = '0';
                 this.R = 255;
                 this.G = 255;
                 this.B = 0;
+                this.point_width = 0.01;
 
                 window.R = 255;
                 window.G = 255;
                 window.B = 0;
 
-                this.textures = true;
-                this.explode = function () {
-                };
+                this.draw_cube = true;
+                this.reset_defaults = function () {};
             };
 
             window.onload = function() {
-                const text = new FizzyText();
+                window.text = new FizzyText();
                 const gui = new dat.GUI();
-                gui.add(text, 'message');
+                gui.add(text, 'particles').listen();
                 var R = gui.add(text, 'R', 0, 255);
                 var G = gui.add(text, 'G', 0, 255);
                 var B = gui.add(text, 'B', 0, 255);
 
-                var tex = gui.add(text, 'textures');
+                var texture = gui.add(text, 'draw_cube');
+                var size = gui.add(text, 'point_width', 0.001, 0.05);
+                gui.add(text, 'reset_defaults');
+
+
+                size.onChange(function(value){
+                    this.point_width = window.text.point_width;
+                });
 
                 R.onChange(function(value){
-                    window.R = Math.round(text.R);
+                    window.R = Math.round(window.text.R);
                 });
 
                 G.onChange(function(value){
-                    window.G = Math.round(text.G);
+                    window.G = Math.round(window.text.G);
                 });
 
                 B.onChange(function(value){
-                    window.B = Math.round(text.B);
+                    window.B = Math.round(window.text.B);
                 });
 
 
-                tex.onChange(function(value){
+                texture.onChange(function(value){
                     while(scene.children.length > 0) {
                         scene.remove(scene.children[0]);
                     }
@@ -80,7 +87,8 @@
                 return JSON.parse(xmlHttp.responseText);
             }
 
-            function renderPoints(frame, scene, matrix_style) {
+
+            function renderPoints(frame, scene) {
                 /*
                 Given points coordinates (frame) scene, and RGB color, adds all particles to a scene
                 */
@@ -92,8 +100,8 @@
                 }
 
                 var color = new THREE.Color("rgb(" + window.R + "," + window.G + "," + window.B + ")");
-                var geometry = new THREE.SphereGeometry(0.01, 5, 5);
-                var material = new THREE.MeshBasicMaterial({color: color, wireframe: matrix_style});
+                var geometry = new THREE.SphereGeometry(text.point_width, 10, 10);
+                var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
                 for (var i = 0; i < frame["x"].length; ++i) {
                     var point = new THREE.Mesh(geometry, material);
                     point.position.x = frame["x"][i];
@@ -107,27 +115,15 @@
 
 
             function add_textures(matrix_style) {
-
                 // create the shape
                 var geometry = new THREE.BoxGeometry(1, 1, 1);
-                var path = 'https://3docean.img.customer.envatousercontent.com/files/236653866/Featured.jpg?auto=compress%2Cformat&fit=crop&crop=top&w=590&h=590&s=321582fa8635db81a9818e57a69fd28e';
-                if (matrix_style) {
-                    var cubeMaterials = new THREE.MeshBasicMaterial({color: 0x0000FF, wireframe: true});
-                } else {
-                    var cubeMaterials = [
-                        new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
-                        new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // LEFT SIDE
-                        new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // TOP SIDE
-                        new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // BOTTOM SIDE
-                        new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // FRONT SIDE
-                        new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide})  // BACK SIDE
-                    ];
+                if (!matrix_style) {
+                    // create a material, color or image texture
+                    var material = new THREE.MeshFaceMaterial(cubeMaterials);
+                    var cube = new THREE.Mesh(geometry, material);
+                    scene.add(cube);
                 }
 
-                // create a material, color or image texture
-                var material = new THREE.MeshFaceMaterial(cubeMaterials);
-                var cube = new THREE.Mesh(geometry, material);
-                scene.add(cube);
 
                 // light
                 var ambientLight = new THREE.AmbientLight(0xFFFFFF, 1);
@@ -150,6 +146,15 @@
 
 
             var IS_MATRIX = false;
+            var path = 'https://3docean.img.customer.envatousercontent.com/files/236653866/Featured.jpg?auto=compress%2Cformat&fit=crop&crop=top&w=590&h=590&s=321582fa8635db81a9818e57a69fd28e';
+            var cubeMaterials = [
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // LEFT SIDE
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // TOP SIDE
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // BOTTOM SIDE
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // FRONT SIDE
+                new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide})  // BACK SIDE
+            ];
 
             var scene = new THREE.Scene();
             var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -165,7 +170,7 @@
                 var width = window.innerWidth;
                 var height = window.innerHeight;
                 renderer.setSize(width, height);
-                camera.aspect = width / height;
+                camera.aspect = width / height;x
                 camera.updateProjectionMatrix();
             });
 
@@ -241,6 +246,7 @@
                 stats.begin();
 
                 var data = httpGet("http://localhost:8080/get_frame");
+                text.particles = data["x"].length;
                 renderPoints(data, scene, IS_MATRIX);
 
                 update();
