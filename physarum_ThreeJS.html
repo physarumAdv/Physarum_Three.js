@@ -26,14 +26,9 @@
 
             const FizzyText = function () {
                 this.particles = '0';
-                this.R = 255;
-                this.G = 255;
-                this.B = 0;
+                this.color = [255, 255, 0]; // RGB array
+                window.color = [255, 255, 0]; // RGB array
                 this.point_width = 0.01;
-
-                window.R = 255;
-                window.G = 255;
-                window.B = 0;
 
                 this.draw_cube = true;
                 this.reset_defaults = function () {};
@@ -42,10 +37,10 @@
             window.onload = function() {
                 window.text = new FizzyText();
                 const gui = new dat.GUI();
+                gui.remember(window.text);
+
                 gui.add(text, 'particles').listen();
-                var R = gui.add(text, 'R', 0, 255);
-                var G = gui.add(text, 'G', 0, 255);
-                var B = gui.add(text, 'B', 0, 255);
+                var cl = gui.addColor(text, 'color');
 
                 var texture = gui.add(text, 'draw_cube');
                 var size = gui.add(text, 'point_width', 0.001, 0.05);
@@ -56,16 +51,10 @@
                     this.point_width = window.text.point_width;
                 });
 
-                R.onChange(function(value){
-                    window.R = Math.round(window.text.R);
-                });
-
-                G.onChange(function(value){
-                    window.G = Math.round(window.text.G);
-                });
-
-                B.onChange(function(value){
-                    window.B = Math.round(window.text.B);
+                cl.onChange(function(value){
+                    window.color[0] = Math.round(value[0]);
+                    window.color[1] = Math.round(value[1]);
+                    window.color[2] = Math.round(value[2]);
                 });
 
 
@@ -99,7 +88,7 @@
                     scene.remove(selectedObject);
                 }
 
-                var color = new THREE.Color("rgb(" + window.R + "," + window.G + "," + window.B + ")");
+                var color = new THREE.Color("rgb(" + window.color[0] + "," + window.color[1] + "," + window.color[2] + ")");
                 var geometry = new THREE.SphereGeometry(text.point_width, 10, 10);
                 var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
                 for (var i = 0; i < frame["x"].length; ++i) {
@@ -246,7 +235,7 @@
                 stats.begin();
 
                 var data = httpGet("http://localhost:8080/get_frame");
-                text.particles = data["x"].length;
+                window.text.particles = data["x"].length;
                 renderPoints(data, scene, IS_MATRIX);
 
                 update();
