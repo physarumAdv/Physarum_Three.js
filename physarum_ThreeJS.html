@@ -31,20 +31,28 @@
                 this.point_width = 0.01;
 
                 this.draw_cube = true;
-                this.reset_defaults = function () {};
+                this.reset_defaults = function () {
+                    /* Here is the update */
+                    for (var i = 0; i < window.gui.__controllers.length; i++) {
+                        window.gui.__controllers[i].setValue(gui.__controllers[i].initialValue);
+                    }
+                };
             };
 
             window.onload = function() {
                 window.text = new FizzyText();
-                const gui = new dat.GUI();
-                gui.remember(window.text);
+                window.gui = new dat.GUI({
+                    load: JSON,
+                    preset: 'Flow'
+                });
+                window.gui.remember(window.text);
 
-                gui.add(text, 'particles').listen();
-                var cl = gui.addColor(text, 'color');
+                window.gui.add(window.text, 'particles').listen();
+                var cl = window.gui.addColor(window.text, 'color');
 
-                var texture = gui.add(text, 'draw_cube');
-                var size = gui.add(text, 'point_width', 0.001, 0.05);
-                gui.add(text, 'reset_defaults');
+                var texture = window.gui.add(window.text, 'draw_cube');
+                var size = window.gui.add(window.text, 'point_width', 0.001, 0.02);
+                window.gui.add(window.text, 'reset_defaults');
 
 
                 size.onChange(function(value){
