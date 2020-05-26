@@ -27,10 +27,16 @@
             const FizzyText = function () {
                 this.particles = '0';
                 this.color = [255, 255, 0]; // RGB array
-                window.color = [255, 255, 0]; // RGB array
+                window.color = [255, 255, 0];
                 this.point_width = 0.01;
 
+                this.start_color = [255, 255, 0];
+                this.end_color = [0, 255, 255];
+                window.start_color = [255, 255, 0];
+                window.end_color = [0, 255, 255];
+
                 this.draw_cube = true;
+                this.turn_on = false;
                 this.reset_defaults = function () {
                     /* Here is the update */
                     for (var i = 0; i < window.gui.__controllers.length; i++) {
@@ -46,9 +52,13 @@
                     preset: 'Flow'
                 });
                 window.gui.remember(window.text);
-
                 window.gui.add(window.text, 'particles').listen();
+
                 var cl = window.gui.addColor(window.text, 'color');
+                var folder = window.gui.addFolder('Advanced colors');
+                var cl1 = folder.addColor(window.text, 'start_color');
+                var cl2 = folder.addColor(window.text, 'end_color');
+                var advanced_trigger = folder.add(window.text, 'turn_on');
 
                 var texture = window.gui.add(window.text, 'draw_cube');
                 var size = window.gui.add(window.text, 'point_width', 0.001, 0.02);
@@ -65,6 +75,17 @@
                     window.color[2] = Math.round(value[2]);
                 });
 
+                /* advanced colors */
+                cl1.onChange(function(value){
+                    window.end_color[0] = Math.round(value[0]);
+                    window.end_color[1] = Math.round(value[1]);
+                    window.end_color[2] = Math.round(value[2]);
+                });
+                cl2.onChange(function(value){
+                    window.start_color[0] = Math.round(value[0]);
+                    window.start_color[1] = Math.round(value[1]);
+                    window.start_color[2] = Math.round(value[2]);
+                });
 
                 texture.onChange(function(value){
                     while(scene.children.length > 0) {
