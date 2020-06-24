@@ -1,8 +1,7 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <title>Three.js</title>
-
+        <title>Physarum</title>
 
         <style>
             body { margin: 0; }
@@ -30,13 +29,17 @@
                 window.color = [255, 255, 0];
                 this.point_width = 0.01;
 
-                this.start_color = [255, 255, 0];
-                this.end_color = [0, 255, 255];
-                window.start_color = [255, 255, 0];
-                window.end_color = [0, 255, 255];
+                this.time = 0;
+
+
+                this.Sensor_angle = 0;
+                this.Step_size = 0;
+                this.Agent_rotation = 0;
+                this.Sensor_offset = 0;
 
                 this.draw_cube = true;
                 this.turn_on = false;
+
                 this.reset_defaults = function () {
                     /* Here is the update */
                     for (var i = 0; i < window.gui.__controllers.length; i++) {
@@ -44,6 +47,7 @@
                     }
                 };
             };
+
 
             window.onload = function() {
                 window.text = new FizzyText();
@@ -55,18 +59,28 @@
                 window.gui.add(window.text, 'particles').listen();
 
                 var cl = window.gui.addColor(window.text, 'color');
-                var folder = window.gui.addFolder('Advanced colors');
-                var cl1 = folder.addColor(window.text, 'start_color');
-                var cl2 = folder.addColor(window.text, 'end_color');
-                var advanced_trigger = folder.add(window.text, 'turn_on');
 
                 var texture = window.gui.add(window.text, 'draw_cube');
                 var size = window.gui.add(window.text, 'point_width', 0.001, 0.02);
                 window.gui.add(window.text, 'reset_defaults');
 
+                var playback = window.gui.addFolder('Playback');
+                var stime = playback.add(window.text, 'time', 0, 1);
+                var saves = playback.addFolder('Load save');
+
+
+                var model = window.gui.addFolder('Model Settings');
+                var sa = model.add(window.text, 'Sensor_angle');
+                var ss = model.add(window.text, 'Step_size');
+                var ar = model.add(window.text, 'Agent_rotation');
+                var so = model.add(window.text, 'Sensor_offset');
 
                 size.onChange(function(value){
                     this.point_width = window.text.point_width;
+                });
+
+                stime.onChange(function(value){
+                    this.time = window.text.time;
                 });
 
                 cl.onChange(function(value){
@@ -75,21 +89,9 @@
                     window.color[2] = Math.round(value[2]);
                 });
 
-                /* advanced colors */
-                cl1.onChange(function(value){
-                    window.end_color[0] = Math.round(value[0]);
-                    window.end_color[1] = Math.round(value[1]);
-                    window.end_color[2] = Math.round(value[2]);
-                });
-                cl2.onChange(function(value){
-                    window.start_color[0] = Math.round(value[0]);
-                    window.start_color[1] = Math.round(value[1]);
-                    window.start_color[2] = Math.round(value[2]);
-                });
-
                 texture.onChange(function(value){
-                    while(scene.children.length > 0) {
-                        scene.remove(scene.children[0]);
+                    while(window.scene.children.length > 0) {
+                        window.scene.remove(window.scene.children[0]);
                     }
 
                     IS_MATRIX = !value;
@@ -106,15 +108,15 @@
             }
 
 
-            function renderPoints(frame, scene) {
+            function renderPoints(frame) {
                 /*
-                Given points coordinates (frame) scene, and RGB color, adds all particles to a scene
+                Given points coordinates (frame) window.scene, and RGB color, adds all particles to a window.scene
                 */
 
-                // clear scene from points
-                while(scene.children.length > 4) {
-                    var selectedObject = scene.getObjectByName("point");
-                    scene.remove(selectedObject);
+                // clear window.scene from points
+                while(window.scene.children.length > 4) {
+                    var selectedObject = window.scene.getObjectByName("point");
+                    window.scene.remove(selectedObject);
                 }
 
                 var color = new THREE.Color("rgb(" + window.color[0] + "," + window.color[1] + "," + window.color[2] + ")");
@@ -126,9 +128,8 @@
                     point.position.y = frame["y"][i];
                     point.position.z = frame["z"][i];
                     point.name = "point";
-                    scene.add(point);
+                    window.scene.add(point);
                 }
-                return scene;
             }
 
 
@@ -139,27 +140,18 @@
                     // create a material, color or image texture
                     var material = new THREE.MeshFaceMaterial(cubeMaterials);
                     var cube = new THREE.Mesh(geometry, material);
-                    scene.add(cube);
+                    window.scene.add(cube);
                 }
-
 
                 // light
                 var ambientLight = new THREE.AmbientLight(0xFFFFFF, 1);
-                scene.add(ambientLight);
+                window.scene.add(ambientLight);
 
                 var light1 = new THREE.PointLight(0xFFFFFF, 0.5, 500);
                 light1.position.x = 3;
                 light1.position.y = 2;
                 light1.position.z = 2;
-                scene.add(light1);
-
-                var geometry = new THREE.SphereGeometry(0.1, 5, 5);
-                var material = new THREE.MeshBasicMaterial({color: 0x0000FF, wireframe: true});
-                var point = new THREE.Mesh(geometry, material);
-                point.position.x = 3;
-                point.position.y = 2;
-                point.position.z = 2;
-                scene.add(point);
+                window.scene.add(light1);
             }
 
 
@@ -174,78 +166,84 @@
                 new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide})  // BACK SIDE
             ];
 
-            var scene = new THREE.Scene();
-            var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            var stats = initStats();
+            function restart() {
+                window.scene = new THREE.Scene();
+                window.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                window.stats = initStats();
+                // rayCaster = new THREE.Raycaster();
 
-            var renderer = new THREE.WebGLRenderer();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-            var pmremGenerator = new THREE.PMREMGenerator( renderer );
-            pmremGenerator.compileEquirectangularShader();
+                window.renderer = new THREE.WebGLRenderer();
+                window.renderer.setSize(window.innerWidth, window.innerHeight);
 
-            window.addEventListener('resize', function() {
-                var width = window.innerWidth;
-                var height = window.innerHeight;
-                renderer.setSize(width, height);
-                camera.aspect = width / height;x
-                camera.updateProjectionMatrix();
-            });
+                document.body.appendChild(window.renderer.domElement);
+                var controls = new OrbitControls(window.camera, window.renderer.domElement);
+                var pmremGenerator = new THREE.PMREMGenerator(window.renderer);
 
-            document.addEventListener('keydown', onDocumentKeyDown, false);
-            function onDocumentKeyDown(event) {
-                var keyCode = event.which;
-                console.log(keyCode);
-                if (keyCode === 87) {
-                    cube.position.y += 1;
-                } else if (keyCode === 83) {
-                    cube.position.y -= 1;
-                } else if (keyCode === 65) {
-                    cube.position.x -= 1;
-                } else if (keyCode === 68) {
-                    cube.position.x += 1;
-                } else if (keyCode === 32) {
-                    cube.position.set(0, 0, 0);
-                }
-            }
+                pmremGenerator.compileEquirectangularShader();
 
-            new RGBELoader()
-                .setDataType( THREE.UnsignedByteType )
-                .setPath( 'build/models/' )
-                .load( 'royal_esplanade_1k.hdr', function ( texture ) {
-
-                    var envMap = pmremGenerator.fromEquirectangular( texture ).texture;
-
-                    scene.background = envMap;
-                    scene.environment = envMap;
-
-                    texture.dispose();
-                    pmremGenerator.dispose();
-
-                    render();
-
-                    var roughnessMipmapper = new RoughnessMipmapper( renderer );
-
-                    var loader = new GLTFLoader().setPath( 'build/models/' );
-                    loader.load('cobra.gltf', function (gltf) {
-                        gltf.scene.traverse(function(child) {
-                            if (child.isMesh) {
-                                roughnessMipmapper.generateMipmaps(child.material);
-                            }
-                        });
-
-                        // add 3D model to set
-                        // scene.add(gltf.scene);
-
-                        roughnessMipmapper.dispose();
-                        render();
-                    });
+                window.addEventListener('resize', function () {
+                    var width = window.innerWidth;
+                    var height = window.innerHeight;
+                    window.renderer.setSize(width, height);
+                    window.camera.aspect = width / height;
+                    window.camera.updateProjectionMatrix();
                 });
+                document.addEventListener('keydown', onDocumentKeyDown, false);
+
+                function onDocumentKeyDown(event) {
+                    var keyCode = event.which;
+                    console.log(keyCode);
+                    if (keyCode === 87) {
+                        cube.position.y += 1;
+                    } else if (keyCode === 83) {
+                        cube.position.y -= 1;
+                    } else if (keyCode === 65) {
+                        cube.position.x -= 1;
+                    } else if (keyCode === 68) {
+                        cube.position.x += 1;
+                    } else if (keyCode === 32) {
+                        cube.position.set(0, 0, 0);
+                    }
+
+                }
 
 
-            var controls = new OrbitControls(camera, renderer.domElement);
-            add_textures(IS_MATRIX);
-            camera.position.z = 3;
+                new RGBELoader()
+                    .setDataType(THREE.UnsignedByteType)
+                    .setPath('build/models/')
+                    .load('royal_esplanade_1k.hdr', function (texture) {
+
+                        var envMap = pmremGenerator.fromEquirectangular(texture).texture;
+
+                        window.scene.background = envMap;
+                        window.scene.environment = envMap;
+
+                        texture.dispose();
+                        pmremGenerator.dispose();
+
+                        render();
+
+                        var roughnessMipmapper = new RoughnessMipmapper(window.renderer);
+
+                        var loader = new GLTFLoader().setPath('build/models/');
+                        loader.load('cobra.gltf', function (gltf) {
+                            gltf.scene.traverse(function (child) {
+                                if (child.isMesh) {
+                                    roughnessMipmapper.generateMipmaps(child.material);
+                                }
+                            });
+
+                            // add 3D model to set
+                            // window.scene.add(gltf.window.scene);
+
+                            roughnessMipmapper.dispose();
+                            render();
+                        });
+                    });
+                add_textures(IS_MATRIX);
+                window.camera.position.z = 3;
+            }
+            restart();
 
             // game logic
             var update = function() {
@@ -253,34 +251,38 @@
                 // cube.rotation.y += 0.005;
             };
 
-            // draw scene
+            // draw window.scene
             var render = function() {
-                renderer.render(scene, camera);
+                window.renderer.render(window.scene, window.camera);    
             };
 
             // run game loop (update, render, repeat)
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
-                stats.begin();
+                window.stats.begin();
 
+                var trigger = httpGet("http://localhost:8080/get_status");
                 var data = httpGet("http://localhost:8080/get_frame");
+
                 window.text.particles = data["x"].length;
-                renderPoints(data, scene, IS_MATRIX);
+                if (trigger['status']) {
+                    renderPoints(data, window.scene, IS_MATRIX);
+                }
 
                 update();
                 render();
-                stats.end();
+                window.stats.end();
             };
 
-            GameLoop();
+            GameLoop(window.scene);
             function initStats() {
-                var stats = new Stats();
-                stats.setMode(0); // 0: fps, 1: ms
+                window.stats = new Stats();
+                window.stats.setMode(0); // 0: fps, 1: ms
 
                 // Align top-left
-                stats.domElement.style.position = 'absolute';
-                stats.domElement.style.left = '0px';
-                stats.domElement.style.top = '0px';
+                window.stats.domElement.style.position = 'absolute';
+                window.stats.domElement.style.left = '0px';
+                window.stats.domElement.style.top = '0px';
 
                 document.body.appendChild( stats.dom );
                 return stats;

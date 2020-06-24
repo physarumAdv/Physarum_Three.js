@@ -8,6 +8,7 @@ const filePath = path.join(__dirname, 'physarum_ThreeJS.html');
 var jsFolderFileServer = new nStatic.Server(path.join(__dirname, 'build'));
 
 var Data = [];
+var Movie = [];
 var NewFrame = false;
 
 function index(req, res) {
@@ -33,11 +34,27 @@ function addFrame(req, res) {
         Data = JSON.parse(body);
         res.end(JSON.stringify({'ok': true}));
     });
+
+    Movie.push(Data);
+    fs.writeFile("save.json", JSON.stringify(Movie), 'utf8', function (err) {
+        if (err) {
+            return console.log(err);
+        }
+
+        console.log("The file was saved!");
+    }); 
+    NewFrame = true
 }
 
 function getFrame(req, res) {
     res.writeHead(200, {'Content-Type': 'text/json'});
     res.end(JSON.stringify(Data));
+    NewFrame = false
+}
+
+function getStatus(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/json'});
+    res.end(JSON.stringify({'done': true, 'status': NewFrame}));
 }
 
 function error404(req, res) {
