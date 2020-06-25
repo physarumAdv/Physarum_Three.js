@@ -38,6 +38,7 @@
                 this.Sensor_offset = 0;
 
                 this.draw_cube = true;
+                this.pause = false;
                 this.turn_on = false;
 
                 this.reset_defaults = function () {
@@ -45,6 +46,10 @@
                     for (var i = 0; i < window.gui.__controllers.length; i++) {
                         window.gui.__controllers[i].setValue(gui.__controllers[i].initialValue);
                     }
+                };
+
+                this.restart = function () {
+                    FrameId = 1;
                 };
             };
 
@@ -66,14 +71,15 @@
 
                 var playback = window.gui.addFolder('Playback');
                 var stime = playback.add(window.text, 'time', 0, 1);
+                var pcontrol = playback.add(window.text, 'pause');
+                playback.add(window.text, 'restart');
                 var saves = playback.addFolder('Load save');
 
-
-                var model = window.gui.addFolder('Model Settings');
+                /* var model = window.gui.addFolder('Model Settings');
                 var sa = model.add(window.text, 'Sensor_angle');
                 var ss = model.add(window.text, 'Step_size');
                 var ar = model.add(window.text, 'Agent_rotation');
-                var so = model.add(window.text, 'Sensor_offset');
+                var so = model.add(window.text, 'Sensor_offset'); */
 
                 size.onChange(function(value){
                     this.point_width = window.text.point_width;
@@ -107,6 +113,20 @@
                 return JSON.parse(xmlHttp.responseText);
             }
 
+            function fileGet(file_name) {
+                var rawFile = new XMLHttpRequest();
+                var allText = '';
+                rawFile.open("GET", file_name, false);
+                rawFile.onreadystatechange = function () {
+                    if(rawFile.readyState === 4) {
+                        if(rawFile.status === 200 || rawFile.status === 0) {
+                            allText = rawFile.responseText;
+                        }
+                    }
+                };
+                rawFile.send(null);
+                return JSON.parse(allText);
+            }
 
             function renderPoints(frame) {
                 /*
@@ -207,7 +227,7 @@
 
                 }
 
-
+                // 3D models loader
                 new RGBELoader()
                     .setDataType(THREE.UnsignedByteType)
                     .setPath('build/models/')
@@ -222,10 +242,9 @@
                         pmremGenerator.dispose();
 
                         render();
-
                         var roughnessMipmapper = new RoughnessMipmapper(window.renderer);
-
                         var loader = new GLTFLoader().setPath('build/models/');
+
                         loader.load('cobra.gltf', function (gltf) {
                             gltf.scene.traverse(function (child) {
                                 if (child.isMesh) {
@@ -235,7 +254,6 @@
 
                             // add 3D model to set
                             // window.scene.add(gltf.window.scene);
-
                             roughnessMipmapper.dispose();
                             render();
                         });
@@ -245,13 +263,17 @@
             }
             restart();
 
+            var FrameId = 0;
+            var current_save = 'save';
+            var all_saves = ['1', '2', '3'];
+
             // game logic
             var update = function() {
                 // cube.rotation.x += 0.01;
                 // cube.rotation.y += 0.005;
             };
 
-            // draw window.scene
+            // draw scene
             var render = function() {
                 window.renderer.render(window.scene, window.camera);    
             };
@@ -261,11 +283,17 @@
                 requestAnimationFrame(GameLoop);
                 window.stats.begin();
 
-                var trigger = httpGet("http://localhost:8080/get_status");
-                var data = httpGet("http://localhost:8080/get_frame");
+                var trigger = {'status': true};
+                // var trigger = httpGet("http://localhost:8080/get_status");
+                // var data = httpGet("http://localhost:8080/get_frame");
 
-                window.text.particles = data["x"].length;
+                var data = fileGet('build/saves/' + current_save + '.json')[FrameId];
+                if (!window.text.pause) {
+                    FrameId++;
+                }
+
                 if (trigger['status']) {
+                    window.text.particles = data["x"].length;
                     renderPoints(data, window.scene, IS_MATRIX);
                 }
 
@@ -273,6 +301,7 @@
                 render();
                 window.stats.end();
             };
+
 
             GameLoop(window.scene);
             function initStats() {
@@ -283,7 +312,6 @@
                 window.stats.domElement.style.position = 'absolute';
                 window.stats.domElement.style.left = '0px';
                 window.stats.domElement.style.top = '0px';
-
                 document.body.appendChild( stats.dom );
                 return stats;
             }
