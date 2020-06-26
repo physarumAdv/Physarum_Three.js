@@ -31,14 +31,13 @@
 
                 this.time = 0;
 
-
-                this.Sensor_angle = 0;
+                /* this.Sensor_angle = 0;
                 this.Step_size = 0;
                 this.Agent_rotation = 0;
-                this.Sensor_offset = 0;
+                this.Sensor_offset = 0; */
 
                 this.draw_cube = true;
-                this.pause = false;
+                this.play = false;
                 this.turn_on = false;
 
                 this.reset_defaults = function () {
@@ -50,6 +49,7 @@
 
                 this.restart = function () {
                     FrameId = 1;
+                    window.text.play = true;
                 };
             };
 
@@ -70,10 +70,11 @@
                 window.gui.add(window.text, 'reset_defaults');
 
                 var playback = window.gui.addFolder('Playback');
-                var stime = playback.add(window.text, 'time', 0, 1);
-                var pcontrol = playback.add(window.text, 'pause');
+                // var stime = playback.add(window.text, 'time', 0, 1);
+                var pcontrol = playback.add(window.text, 'play').listen();
                 playback.add(window.text, 'restart');
                 var saves = playback.addFolder('Load save');
+                playback.open();
 
                 /* var model = window.gui.addFolder('Model Settings');
                 var sa = model.add(window.text, 'Sensor_angle');
@@ -166,12 +167,6 @@
                 // light
                 var ambientLight = new THREE.AmbientLight(0xFFFFFF, 1);
                 window.scene.add(ambientLight);
-
-                var light1 = new THREE.PointLight(0xFFFFFF, 0.5, 500);
-                light1.position.x = 3;
-                light1.position.y = 2;
-                light1.position.z = 2;
-                window.scene.add(light1);
             }
 
 
@@ -190,7 +185,6 @@
                 window.scene = new THREE.Scene();
                 window.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 window.stats = initStats();
-                // rayCaster = new THREE.Raycaster();
 
                 window.renderer = new THREE.WebGLRenderer();
                 window.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -259,7 +253,8 @@
                         });
                     });
                 add_textures(IS_MATRIX);
-                window.camera.position.z = 3;
+                window.camera.position.z = -3;
+                window.camera.rotation.y = 3.14;
             }
             restart();
 
@@ -288,7 +283,7 @@
                 // var trigger = httpGet("http://localhost:8080/get_status");
                 // var data = httpGet("http://localhost:8080/get_frame");
 
-                if (!window.text.pause) {
+                if (window.text.play && FrameId < data.length - 1) {
                     FrameId++;
                 }
 
