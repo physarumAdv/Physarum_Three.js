@@ -279,6 +279,7 @@
             };
 
             // run game loop (update, render, repeat)
+            var data = fileGet('build/saves/' + current_save + '.json');
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
                 window.stats.begin();
@@ -287,14 +288,13 @@
                 // var trigger = httpGet("http://localhost:8080/get_status");
                 // var data = httpGet("http://localhost:8080/get_frame");
 
-                var data = fileGet('build/saves/' + current_save + '.json')[FrameId];
                 if (!window.text.pause) {
                     FrameId++;
                 }
 
                 if (trigger['status']) {
-                    window.text.particles = data["x"].length;
-                    renderPoints(data, window.scene, IS_MATRIX);
+                    window.text.particles = data[FrameId]["x"].length;
+                    renderPoints(data[FrameId], window.scene, IS_MATRIX);
                 }
 
                 update();
