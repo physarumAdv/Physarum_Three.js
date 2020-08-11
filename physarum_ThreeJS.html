@@ -37,7 +37,7 @@
                 this.Sensor_offset = 0; */
 
                 this.draw_cube = true;
-                this.play = false;
+                this.play = true;
                 this.turn_on = false;
 
                 this.reset_defaults = function () {
@@ -48,7 +48,7 @@
                 };
 
                 this.restart = function () {
-                    FrameId = 1;
+                    FrameId = 2;
                     window.text.play = true;
                 };
             };
@@ -258,7 +258,7 @@
             }
             restart();
 
-            var FrameId = 0;
+            var FrameId = 1;
             var current_save = 'save';
             var all_saves = ['1', '2', '3'];
 
@@ -283,7 +283,7 @@
                 // var trigger = httpGet("http://localhost:8080/get_status");
                 // var data = httpGet("http://localhost:8080/get_frame");
 
-                if (window.text.play && FrameId < data.length - 1) {
+                if (window.text.play && FrameId < data.length - 1 && FrameId !== 0) {
                     FrameId++;
                 }
 
