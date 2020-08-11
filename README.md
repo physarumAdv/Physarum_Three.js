@@ -4,6 +4,8 @@
 
 Visualization written on JS library THREE.js of a clever mould Physarum Polycephalum
 
+You can view this project [here](http://pavtiger.ddns.net)
+
 ### Physarum Polycephalum 
 In nature is a mould that minimizes energy on
 growth process and food transfer. This way it builds the shortes and most optimal ways between points
