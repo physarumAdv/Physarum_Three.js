@@ -40,7 +40,6 @@ function addFrame(req, res) {
         if (err) {
             return console.log(err);
         }
-        console.log("The file was saved!");
     }); 
     NewFrame = true
 }
@@ -79,7 +78,7 @@ function main(req, res) {
         case pathname === '/get_status':
             getStatus(req, res);
             break;
-        case pathname.startsWith('/build/'):
+        case pathname.startsWith('/build/') || pathname === '/refresh':
             req.url = req.url.replace('/build/', '/');
             jsFolderFileServer.serve(req, res);
             break;

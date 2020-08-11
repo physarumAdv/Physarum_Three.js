@@ -39,6 +39,7 @@
                 this.draw_cube = true;
                 this.play = true;
                 this.turn_on = false;
+                this.current_save = start_save;
 
                 this.reset_defaults = function () {
                     /* Here is the update */
@@ -55,7 +56,7 @@
 
 
             window.onload = function() {
-                window.text = new FizzyText();
+                // window.text = new FizzyText();
                 window.gui = new dat.GUI({
                     load: JSON,
                     preset: 'Flow'
@@ -70,24 +71,22 @@
                 window.gui.add(window.text, 'reset_defaults');
 
                 var playback = window.gui.addFolder('Playback');
-                // var stime = playback.add(window.text, 'time', 0, 1);
                 var pcontrol = playback.add(window.text, 'play').listen();
                 playback.add(window.text, 'restart');
-                var saves = playback.addFolder('Load save');
+
+                var chooser = playback.add(window.text,'current_save', all_saves).name('Choose save');
+
                 playback.open();
 
-                /* var model = window.gui.addFolder('Model Settings');
-                var sa = model.add(window.text, 'Sensor_angle');
-                var ss = model.add(window.text, 'Step_size');
-                var ar = model.add(window.text, 'Agent_rotation');
-                var so = model.add(window.text, 'Sensor_offset'); */
+
+                chooser.onChange(function(value) {
+                    FrameId = 2;
+                    window.text.play = true;
+                    window.window.data = fileGet('build/saves/' + window.text.current_save + '.json');
+                });
 
                 size.onChange(function(value){
                     this.point_width = window.text.point_width;
-                });
-
-                stime.onChange(function(value){
-                    this.time = window.text.time;
                 });
 
                 cl.onChange(function(value){
@@ -247,7 +246,7 @@
                             });
 
                             // add 3D model to set
-                            window.scene.add(gltf.window.scene);
+                            // window.scene.add(gltf.window.scene);
                             roughnessMipmapper.dispose();
                             render();
                         });
@@ -259,13 +258,13 @@
             restart();
 
             var FrameId = 1;
-            var current_save = 'save';
-            var all_saves = ['1', '2', '3'];
+            var start_save = 'main';
+            var all_saves = fileGet('build/saves/names.json');
+            window.text = new FizzyText();
 
             // game logic
             var update = function() {
-                // cube.rotation.x += 0.01;
-                // cube.rotation.y += 0.005;
+                // window.camera.position.z = window.camera.position.z + 0.1;
             };
 
             // draw scene
@@ -274,22 +273,22 @@
             };
 
             // run game loop (update, render, repeat)
-            var data = fileGet('build/saves/' + current_save + '.json');
+            window.window.data = fileGet('build/saves/' + window.text.current_save + '.json');
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
                 window.stats.begin();
 
                 var trigger = {'status': true};
                 // var trigger = httpGet("http://localhost:8080/get_status");
-                // var data = httpGet("http://localhost:8080/get_frame");
+                // var window.window.data = httpGet("http://localhost:8080/get_frame");
 
-                if (window.text.play && FrameId < data.length - 1 && FrameId !== 0) {
+                if (window.text.play && FrameId < window.window.window.data.length - 1 && FrameId !== 0) {
                     FrameId++;
                 }
 
                 if (trigger['status']) {
-                    window.text.particles = data[FrameId]["x"].length;
-                    renderPoints(data[FrameId], window.scene, IS_MATRIX);
+                    window.text.particles = window.window.window.data[FrameId]["x"].length;
+                    renderPoints(window.window.window.data[FrameId], window.scene, IS_MATRIX);
                 }
 
                 update();
