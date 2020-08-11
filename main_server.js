@@ -36,7 +36,7 @@ function addFrame(req, res) {
     });
 
     Movie.push(Data);
-    fs.writeFile("save.json", JSON.stringify(Movie), 'utf8', function (err) {
+    fs.writeFile("build/saves/new_save.json", JSON.stringify(Movie), 'utf8', function (err) {
         if (err) {
             return console.log(err);
         }
