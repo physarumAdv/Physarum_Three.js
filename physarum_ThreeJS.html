@@ -51,8 +51,15 @@
                 this.restart = function () {
                     FrameId = 2;
                     window.text.play = true;
-                    var trigger = httpGet("http://localhost:8080/refresh");
-                    window.data = fileGet("build/saves/" + window.text.current_save + ".json");
+                    window.arrayOfPoints = [];
+
+                    // clear window.scene from points
+                    while (window.scene.children.length > 4) {
+                        var selectedObject = window.scene.getObjectByName("point");
+                        window.scene.remove(selectedObject);
+                    }
+                    // var trigger = httpGet("http://localhost:8080/refresh");
+                    // window.data = fileGet("build/saves/" + window.text.current_save + ".json");
                 };
             };
 
@@ -82,14 +89,14 @@
 
 
                 pcontrol.onChange(function(value) {
-                    var trigger = httpGet("http://localhost:8080/refresh");
-                    window.data = fileGet("build/saves/" + window.text.current_save + ".json");
+                    // var trigger = httpGet("http://localhost:8080/refresh");
+                    // window.data = fileGet("build/saves/" + window.text.current_save + ".json");
                 });
 
                 chooser.onChange(function(value) {
                     FrameId = 2;
                     window.text.play = true;
-                    window.window.data = fileGet("build/saves/" + window.text.current_save + ".json");
+                    window.data = fileGet("build/saves/" + window.text.current_save + ".json");
                 });
 
                 size.onChange(function(value){
@@ -140,18 +147,11 @@
                 Given points coordinates (frame) window.scene, and RGB color, adds all particles to a window.scene
                 */
 
-                // clear window.scene from points
-                /* while (window.scene.children.length > 4) {
-                    var selectedObject = window.scene.getObjectByName("point");
-                    window.scene.remove(selectedObject);
-                } */
-
                 var color = new THREE.Color("rgb(" + window.color[0] + "," + window.color[1] + "," + window.color[2] + ")");
                 var geometry = new THREE.SphereGeometry(text.point_width, 10, 10);
                 var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
 
                 for (var i = 0; i < frame["x"].length; ++i) {
-                    console.log(window.arrayOfPoints.length);
                     if (i < window.arrayOfPoints.length) {
                         window.arrayOfPoints[i].position.x = frame["x"][i];
                         window.arrayOfPoints[i].position.y = frame["y"][i];
@@ -272,8 +272,8 @@
             restart();
 
             var FrameId = 1;
-            var start_save = "main";
-            var all_saves = fileGet("build/saves/names.json");
+            var start_save = fileGet("build/saves/names.json")["default_name"];
+            var all_saves = fileGet("build/saves/names.json")["names"];
             window.text = new FizzyText();
 
             // game logic
@@ -287,21 +287,21 @@
             };
 
             // run game loop (update, render, repeat)
-            window.window.data = fileGet("build/saves/" + window.text.current_save + ".json");
+            window.data = fileGet("build/saves/" + window.text.current_save + ".json");
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
                 window.stats.begin();
 
                 var trigger = {"status": true};
                 // var trigger = httpGet("http://localhost:8080/get_status");
-                // var window.window.data = httpGet("http://localhost:8080/get_frame");
+                // var window.data = httpGet("http://localhost:8080/get_frame");
 
-                if (window.text.play && FrameId < window.window.window.data.length - 1 && FrameId !== 0) {
+                if (window.text.play && FrameId < window.data.length - 1 && FrameId !== 0) {
                     FrameId++;
                 }
 
-                if (trigger["status"]) {
-                    window.text.particles = window.window.window.data[FrameId]["x"].length;
+                if (trigger["status"] && window.data.length - 1 !== FrameId) {
+                    window.text.particles = window.data[FrameId]["x"].length;
                     renderPoints(window.data[FrameId], window.scene, IS_MATRIX);
                 }
 
