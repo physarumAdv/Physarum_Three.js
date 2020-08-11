@@ -26,15 +26,9 @@
             const FizzyText = function () {
                 this.particles = "0";
                 this.color = [255, 255, 0]; // RGB array
-                window.color = [255, 255, 0];
                 this.point_width = 0.01;
 
                 this.time = 0;
-
-                /* this.Sensor_angle = 0;
-                this.Step_size = 0;
-                this.Agent_rotation = 0;
-                this.Sensor_offset = 0; */
 
                 this.draw_cube = true;
                 this.play = true;
@@ -54,12 +48,12 @@
                     window.arrayOfPoints = [];
 
                     // clear window.scene from points
-                    while (window.scene.children.length > 4) {
+                    while (window.scene.children.length > 2) {
                         var selectedObject = window.scene.getObjectByName("point");
                         window.scene.remove(selectedObject);
                     }
-                    var trigger = httpGet("http://localhost:8080/refresh");
-                    window.data = fileGet("build/saves/" + window.text.current_save + ".json");
+                    // var trigger = httpGet("http://localhost:8080/refresh");
+                    // window.data = fileGet("build/saves/" + window.text.current_save + ".json");
                 };
             };
 
@@ -88,10 +82,10 @@
                 playback.open();
 
 
-                pcontrol.onChange(function(value) {
-                    // var trigger = httpGet("http://localhost:8080/refresh");
-                    // window.data = fileGet("build/saves/" + window.text.current_save + ".json");
-                });
+                // pcontrol.onChange(function(value) {
+                //     var trigger = httpGet("http://localhost:8080/refresh");
+                //     window.data = fileGet("build/saves/" + window.text.current_save + ".json");
+                // });
 
                 chooser.onChange(function(value) {
                     FrameId = 2;
@@ -100,13 +94,11 @@
                 });
 
                 size.onChange(function(value){
-                    this.point_width = window.text.point_width;
+                    refresh_points();
                 });
 
                 cl.onChange(function(value){
-                    window.color[0] = Math.round(value[0]);
-                    window.color[1] = Math.round(value[1]);
-                    window.color[2] = Math.round(value[2]);
+                    refresh_points();
                 });
 
                 texture.onChange(function(value){
@@ -142,14 +134,34 @@
                 return JSON.parse(allText);
             }
 
+            function refresh_points() {
+                // clear window.scene from points
+                while (window.scene.children.length > 2) {
+                    var selectedObject = window.scene.getObjectByName("point");
+                    window.scene.remove(selectedObject);
+                }
+
+                var frame = window.data[FrameId];
+                for (var i = 0; i < frame["x"].length; ++i) {
+                    var color = new THREE.Color("rgb(" + window.text.color[0] + "," + window.text.color[1] + "," + window.text.color[2] + ")");
+                    var geometry = new THREE.SphereGeometry(window.text.point_width, 10, 10);
+                    var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
+
+                    var point = new THREE.Mesh(geometry, material);
+                    point.name = "point";
+                    window.arrayOfPoints[i] = point;
+                    window.scene.add(point);
+
+                    window.arrayOfPoints[i].position.x = frame["x"][i];
+                    window.arrayOfPoints[i].position.y = frame["y"][i];
+                    window.arrayOfPoints[i].position.z = frame["z"][i];   
+                }
+            }
+
             function renderPoints(frame) {
                 /*
                 Given points coordinates (frame) window.scene, and RGB color, adds all particles to a window.scene
                 */
-
-                var color = new THREE.Color("rgb(" + window.color[0] + "," + window.color[1] + "," + window.color[2] + ")");
-                var geometry = new THREE.SphereGeometry(text.point_width, 10, 10);
-                var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
 
                 for (var i = 0; i < frame["x"].length; ++i) {
                     if (i < window.arrayOfPoints.length) {
@@ -157,11 +169,19 @@
                         window.arrayOfPoints[i].position.y = frame["y"][i];
                         window.arrayOfPoints[i].position.z = frame["z"][i];
                     } else {
+                        var color = new THREE.Color("rgb(" + window.text.color[0] + "," + window.text.color[1] + "," + window.text.color[2] + ")");
+                        var geometry = new THREE.SphereGeometry(window.text.point_width, 10, 10);
+                        var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
+
                         var point = new THREE.Mesh(geometry, material);
                         point.name = "point";
                         window.scene.add(point);
                         window.arrayOfPoints.push(point);
-                    } 
+                        
+                        window.arrayOfPoints[i].position.x = frame["x"][i];
+                        window.arrayOfPoints[i].position.y = frame["y"][i];
+                        window.arrayOfPoints[i].position.z = frame["z"][i];
+                    }
                 }
             }
 
