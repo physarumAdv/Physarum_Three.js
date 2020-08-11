@@ -1,20 +1,20 @@
-const http = require('http');
-const urlapi = require('url');
-const fs = require('fs');
-const path = require('path');
-const nStatic = require('node-static');
+const http = require("http");
+const urlapi = require("url");
+const fs = require("fs");
+const path = require("path");
+const nStatic = require("node-static");
 
-const filePath = path.join(__dirname, 'physarum_ThreeJS.html');
-var jsFolderFileServer = new nStatic.Server(path.join(__dirname, 'build'));
+const filePath = path.join(__dirname, "physarum_ThreeJS.html");
+var jsFolderFileServer = new nStatic.Server(path.join(__dirname, "build"));
 
 var Data = [];
 var Movie = [];
 var NewFrame = false;
 
 function index(req, res) {
-    fs.readFile(filePath, {encoding: 'utf-8'}, function(err, data) {
+    fs.readFile(filePath, {encoding: "utf-8"}, function(err, data) {
         if (!err) {
-            res.writeHead(200, {'Content-Type': 'text/html'});
+            res.writeHead(200, {"Content-Type": "text/html"});
             res.end(data);
         } else {
             console.log(err);
@@ -23,20 +23,20 @@ function index(req, res) {
 }
 
 function addFrame(req, res) {
-    res.writeHead(200, {'Content-Type': 'text/json'});
+    res.writeHead(200, {"Content-Type": "text/json"});
 
     var body = "";
     req.on("data", function (chunk) {
         body += chunk.toString();
     });
 
-    req.on('end', function() {
+    req.on("end", function() {
         Data = JSON.parse(body);
-        res.end(JSON.stringify({'ok': true}));
+        res.end(JSON.stringify({"ok": true}));
     });
 
     Movie.push(Data);
-    fs.writeFile("build/saves/new_save.json", JSON.stringify(Movie), 'utf8', function (err) {
+    fs.writeFile("build/saves/new_save.json", JSON.stringify(Movie), "utf8", function (err) {
         if (err) {
             return console.log(err);
         }
@@ -45,18 +45,25 @@ function addFrame(req, res) {
 }
 
 function getFrame(req, res) {
-    res.writeHead(200, {'Content-Type': 'text/json'});
+    res.writeHead(200, {"Content-Type": "text/json"});
     res.end(JSON.stringify(Data));
     NewFrame = false
 }
 
 function getStatus(req, res) {
-    res.writeHead(200, {'Content-Type': 'text/json'});
-    res.end(JSON.stringify({'done': true, 'status': NewFrame}));
+    res.writeHead(200, {"Content-Type": "text/json"});
+    res.end(JSON.stringify({"done": true, "status": NewFrame}));
+}
+
+function refresh(req, res) {
+    req.url = req.url.replace("/build/", "/");
+    jsFolderFileServer.serve(req, res);
+    res.writeHead(200, {"Content-Type": "text/json"});
+    res.end(JSON.stringify({"done": true, "status": NewFrame}));
 }
 
 function error404(req, res) {
-    res.writeHead(404, {'Content-Type': 'text/html'});
+    res.writeHead(404, {"Content-Type": "text/html"});
     res.end("404 Not Found :(");
 }
 
@@ -66,20 +73,23 @@ function main(req, res) {
     var pathname = url.pathname;
 
     switch(true) {
-        case pathname === '/':
+        case pathname === "/":
             index(req, res);
             break;
-        case pathname === '/add_frame':
+        case pathname === "/add_frame":
             addFrame(req, res);
             break;
-        case pathname === '/get_frame':
+        case pathname === "/get_frame":
             getFrame(req, res);
             break;
-        case pathname === '/get_status':
+        case pathname === "/get_status":
             getStatus(req, res);
             break;
-        case pathname.startsWith('/build/') || pathname === '/refresh':
-            req.url = req.url.replace('/build/', '/');
+        case pathname === "/refresh":
+            refresh(req, res)
+            break;
+        case pathname.startsWith("/build/"):
+            req.url = req.url.replace("/build/", "/");
             jsFolderFileServer.serve(req, res);
             break;
         default:

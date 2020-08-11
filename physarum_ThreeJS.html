@@ -17,14 +17,14 @@
         <script type="module">
             import * as THREE from "./build/three.module.js";
 
-            import { OrbitControls } from './build/OrbitControls.js';
-            import { GLTFLoader } from './build/GLTFLoader.js';
-            import { RGBELoader } from './build/RGBELoader.js';
-            import { RoughnessMipmapper } from './build/RoughnessMipmapper.js';
+            import { OrbitControls } from "./build/OrbitControls.js";
+            import { GLTFLoader } from "./build/GLTFLoader.js";
+            import { RGBELoader } from "./build/RGBELoader.js";
+            import { RoughnessMipmapper } from "./build/RoughnessMipmapper.js";
 
 
             const FizzyText = function () {
-                this.particles = '0';
+                this.particles = "0";
                 this.color = [255, 255, 0]; // RGB array
                 window.color = [255, 255, 0];
                 this.point_width = 0.01;
@@ -51,6 +51,8 @@
                 this.restart = function () {
                     FrameId = 2;
                     window.text.play = true;
+                    var trigger = httpGet("http://localhost:8080/refresh");
+                    window.data = fileGet("build/saves/" + window.text.current_save + ".json");
                 };
             };
 
@@ -59,30 +61,35 @@
                 // window.text = new FizzyText();
                 window.gui = new dat.GUI({
                     load: JSON,
-                    preset: 'Flow'
+                    preset: "Flow"
                 });
                 window.gui.remember(window.text);
-                window.gui.add(window.text, 'particles').listen();
+                window.gui.add(window.text, "particles").listen();
 
-                var cl = window.gui.addColor(window.text, 'color');
+                var cl = window.gui.addColor(window.text, "color");
 
-                var texture = window.gui.add(window.text, 'draw_cube');
-                var size = window.gui.add(window.text, 'point_width', 0.001, 0.02);
-                window.gui.add(window.text, 'reset_defaults');
+                var texture = window.gui.add(window.text, "draw_cube");
+                var size = window.gui.add(window.text, "point_width", 0.001, 0.02);
+                window.gui.add(window.text, "reset_defaults");
 
-                var playback = window.gui.addFolder('Playback');
-                var pcontrol = playback.add(window.text, 'play').listen();
-                playback.add(window.text, 'restart');
+                var playback = window.gui.addFolder("Playback");
+                var pcontrol = playback.add(window.text, "play").listen();
+                playback.add(window.text, "restart");
 
-                var chooser = playback.add(window.text,'current_save', all_saves).name('Choose save');
+                var chooser = playback.add(window.text,"current_save", all_saves).name("Choose save");
 
                 playback.open();
 
 
+                pcontrol.onChange(function(value) {
+                    var trigger = httpGet("http://localhost:8080/refresh");
+                    window.data = fileGet("build/saves/" + window.text.current_save + ".json");
+                });
+
                 chooser.onChange(function(value) {
                     FrameId = 2;
                     window.text.play = true;
-                    window.window.data = fileGet('build/saves/' + window.text.current_save + '.json');
+                    window.window.data = fileGet("build/saves/" + window.text.current_save + ".json");
                 });
 
                 size.onChange(function(value){
@@ -115,7 +122,7 @@
 
             function fileGet(file_name) {
                 var rawFile = new XMLHttpRequest();
-                var allText = '';
+                var allText = "";
                 rawFile.open("GET", file_name, false);
                 rawFile.onreadystatechange = function () {
                     if(rawFile.readyState === 4) {
@@ -134,21 +141,27 @@
                 */
 
                 // clear window.scene from points
-                while(window.scene.children.length > 4) {
+                /* while (window.scene.children.length > 4) {
                     var selectedObject = window.scene.getObjectByName("point");
                     window.scene.remove(selectedObject);
-                }
+                } */
 
                 var color = new THREE.Color("rgb(" + window.color[0] + "," + window.color[1] + "," + window.color[2] + ")");
                 var geometry = new THREE.SphereGeometry(text.point_width, 10, 10);
                 var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
+
                 for (var i = 0; i < frame["x"].length; ++i) {
-                    var point = new THREE.Mesh(geometry, material);
-                    point.position.x = frame["x"][i];
-                    point.position.y = frame["y"][i];
-                    point.position.z = frame["z"][i];
-                    point.name = "point";
-                    window.scene.add(point);
+                    console.log(window.arrayOfPoints.length);
+                    if (i < window.arrayOfPoints.length) {
+                        window.arrayOfPoints[i].position.x = frame["x"][i];
+                        window.arrayOfPoints[i].position.y = frame["y"][i];
+                        window.arrayOfPoints[i].position.z = frame["z"][i];
+                    } else {
+                        var point = new THREE.Mesh(geometry, material);
+                        point.name = "point";
+                        window.scene.add(point);
+                        window.arrayOfPoints.push(point);
+                    } 
                 }
             }
 
@@ -169,8 +182,9 @@
             }
 
 
+            window.arrayOfPoints = [];
             var IS_MATRIX = false;
-            var path = 'https://3docean.img.customer.envatousercontent.com/files/236653866/Featured.jpg?auto=compress%2Cformat&fit=crop&crop=top&w=590&h=590&s=321582fa8635db81a9818e57a69fd28e';
+            var path = "https://3docean.img.customer.envatousercontent.com/files/236653866/Featured.jpg?auto=compress%2Cformat&fit=crop&crop=top&w=590&h=590&s=321582fa8635db81a9818e57a69fd28e";
             var cubeMaterials = [
                 new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
                 new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // LEFT SIDE
@@ -194,14 +208,14 @@
 
                 pmremGenerator.compileEquirectangularShader();
 
-                window.addEventListener('resize', function () {
+                window.addEventListener("resize", function () {
                     var width = window.innerWidth;
                     var height = window.innerHeight;
                     window.renderer.setSize(width, height);
                     window.camera.aspect = width / height;
                     window.camera.updateProjectionMatrix();
                 });
-                document.addEventListener('keydown', onDocumentKeyDown, false);
+                document.addEventListener("keydown", onDocumentKeyDown, false);
 
                 function onDocumentKeyDown(event) {
                     var keyCode = event.which;
@@ -223,8 +237,8 @@
                 // 3D models loader
                 new RGBELoader()
                     .setDataType(THREE.UnsignedByteType)
-                    .setPath('build/models/')
-                    .load('royal_esplanade_1k.hdr', function (texture) {
+                    .setPath("build/models/")
+                    .load("royal_esplanade_1k.hdr", function (texture) {
 
                         var envMap = pmremGenerator.fromEquirectangular(texture).texture;
 
@@ -236,9 +250,9 @@
 
                         render();
                         var roughnessMipmapper = new RoughnessMipmapper(window.renderer);
-                        var loader = new GLTFLoader().setPath('build/models/');
+                        var loader = new GLTFLoader().setPath("build/models/");
 
-                        loader.load('cobra.gltf', function (gltf) {
+                        loader.load("cobra.gltf", function (gltf) {
                             gltf.scene.traverse(function (child) {
                                 if (child.isMesh) {
                                     roughnessMipmapper.generateMipmaps(child.material);
@@ -258,8 +272,8 @@
             restart();
 
             var FrameId = 1;
-            var start_save = 'main';
-            var all_saves = fileGet('build/saves/names.json');
+            var start_save = "main";
+            var all_saves = fileGet("build/saves/names.json");
             window.text = new FizzyText();
 
             // game logic
@@ -273,12 +287,12 @@
             };
 
             // run game loop (update, render, repeat)
-            window.window.data = fileGet('build/saves/' + window.text.current_save + '.json');
+            window.window.data = fileGet("build/saves/" + window.text.current_save + ".json");
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
                 window.stats.begin();
 
-                var trigger = {'status': true};
+                var trigger = {"status": true};
                 // var trigger = httpGet("http://localhost:8080/get_status");
                 // var window.window.data = httpGet("http://localhost:8080/get_frame");
 
@@ -286,9 +300,9 @@
                     FrameId++;
                 }
 
-                if (trigger['status']) {
+                if (trigger["status"]) {
                     window.text.particles = window.window.window.data[FrameId]["x"].length;
-                    renderPoints(window.window.window.data[FrameId], window.scene, IS_MATRIX);
+                    renderPoints(window.data[FrameId], window.scene, IS_MATRIX);
                 }
 
                 update();
@@ -303,9 +317,9 @@
                 window.stats.setMode(0); // 0: fps, 1: ms
 
                 // Align top-left
-                window.stats.domElement.style.position = 'absolute';
-                window.stats.domElement.style.left = '0px';
-                window.stats.domElement.style.top = '0px';
+                window.stats.domElement.style.position = "absolute";
+                window.stats.domElement.style.left = "0px";
+                window.stats.domElement.style.top = "0px";
                 document.body.appendChild( stats.dom );
                 return stats;
             }
