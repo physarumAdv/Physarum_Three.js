@@ -70,7 +70,7 @@
 
                 var cl = window.gui.addColor(window.text, "color").name("Color");
 
-                var texture = window.gui.add(window.text, "draw_cube").name("Draw cube");
+                // var texture = window.gui.add(window.text, "draw_cube").name("Draw cube");
                 var size = window.gui.add(window.text, "point_width", 0.001, 0.02).name("Point width");
                 window.gui.add(window.text, "reset_defaults").name("Reset defaults");
 
@@ -78,7 +78,7 @@
                 var pcontrol = playback.add(window.text, "play").name("Play").listen();
                 playback.add(window.text, "restart").name("Restart");
 
-                var chooser = playback.add(window.text,"current_save", all_saves).name("Choose save");
+                var chooser = playback.add(window.text, "current_save", all_saves).name("Choose save");
 
                 playback.open();
 
@@ -91,6 +91,10 @@
                 chooser.onChange(function(value) {
                     FrameId = 2;
                     window.text.play = true;
+                    while (window.scene.children.length > 2) {
+                        var selectedObject = window.scene.getObjectByName("point");
+                        window.scene.remove(selectedObject);
+                    }
                     window.data = fileGet("build/saves/" + window.text.current_save + ".json");
                 });
 
@@ -105,14 +109,14 @@
                     refresh_points();
                 });
 
-                texture.onChange(function(value){
-                    while(window.scene.children.length > 0) {
-                        window.scene.remove(window.scene.children[0]);
-                    }
+                // texture.onChange(function(value){
+                //     while(window.scene.children.length > 0) {
+                //         window.scene.remove(window.scene.children[0]);
+                //     }
 
-                    IS_MATRIX = !value;
-                    add_textures(IS_MATRIX);
-                });
+                //     IS_MATRIX = !value;
+                //     add_textures(IS_MATRIX);
+                // });
             };
 
 
