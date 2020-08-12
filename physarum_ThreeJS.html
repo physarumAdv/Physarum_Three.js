@@ -147,9 +147,7 @@
                     window.arrayOfPoints[i].material.color.g = window.text.color[1] / 255;
                     window.arrayOfPoints[i].material.color.b = window.text.color[2] / 255;
 
-                    window.arrayOfPoints[i].scale.x = window.text.point_width;
-                    window.arrayOfPoints[i].scale.y = window.text.point_width;
-                    window.arrayOfPoints[i].scale.z = window.text.point_width;
+                    window.arrayOfPoints[i].scale.set(window.text.point_width, window.text.point_width, window.text.point_width);
                 }
             }
 
@@ -165,10 +163,11 @@
                         window.arrayOfPoints[i].position.z = frame["z"][i];
                     } else {
                         var color = new THREE.Color("rgb(" + Math.round(window.text.color[0]) + "," + Math.round(window.text.color[1]) + "," + Math.round(window.text.color[2]) + ")");
-                        var geometry = new THREE.SphereGeometry(window.default_size * window.text.point_width, 10, 10);
+                        var geometry = new THREE.SphereGeometry(window.default_size, 10, 10);
                         var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
 
                         var point = new THREE.Mesh(geometry, material);
+                        point.scale.set(window.text.point_width, window.text.point_width, window.text.point_width);
                         point.name = "point";
                         window.scene.add(point);
                         window.arrayOfPoints.push(point);
