@@ -95,6 +95,7 @@
                         var selectedObject = window.scene.getObjectByName("point");
                         window.scene.remove(selectedObject);
                     }
+                    window.arrayOfPoints = [];
                     window.data = fileGet("build/saves/" + window.text.current_save + ".json");
                 });
 
