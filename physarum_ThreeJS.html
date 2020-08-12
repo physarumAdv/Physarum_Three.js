@@ -179,7 +179,7 @@
                         window.arrayOfPoints[i].position.y = frame["y"][i];
                         window.arrayOfPoints[i].position.z = frame["z"][i];
                     } else {
-                        var color = new THREE.Color("rgb(" + window.text.color[0] + "," + window.text.color[1] + "," + window.text.color[2] + ")");
+                        var color = new THREE.Color("rgb(" + Math.round(window.text.color[0]) + "," + Math.round(window.text.color[1]) + "," + Math.round(window.text.color[2]) + ")");
                         var geometry = new THREE.SphereGeometry(window.text.point_width, 10, 10);
                         var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
 
