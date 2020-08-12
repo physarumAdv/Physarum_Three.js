@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Physarum</title>
-        <link rel="icon" href="http://localhost:8080/build/icon.jpg">
+        <link rel="icon" href="/build/icon.jpg">
 
         <style>
             body { margin: 0; }
@@ -53,7 +53,7 @@
                         var selectedObject = window.scene.getObjectByName("point");
                         window.scene.remove(selectedObject);
                     }
-                    // var trigger = httpGet("http://localhost:8080/refresh");
+                    // var trigger = httpGet("/refresh");
                     // window.data = fileGet("build/saves/" + window.text.current_save + ".json");
                 };
             };
@@ -84,7 +84,7 @@
 
 
                 // pcontrol.onChange(function(value) {
-                //     var trigger = httpGet("http://localhost:8080/refresh");
+                //     var trigger = httpGet("/refresh");
                 //     window.data = fileGet("build/saves/" + window.text.current_save + ".json");
                 // });
 
@@ -306,8 +306,8 @@
                 window.stats.begin();   
 
                 var trigger = {"status": true};
-                // var trigger = httpGet("http://localhost:8080/get_status");
-                // var window.data = httpGet("http://localhost:8080/get_frame");
+                // var trigger = httpGet("/get_status");
+                // var window.data = httpGet("/get_frame");
 
                 if (window.text.play && FrameId < window.data.length - 1 && FrameId !== 0) {
                     FrameId++;
