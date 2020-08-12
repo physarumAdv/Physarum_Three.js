@@ -2,6 +2,7 @@
 <html>
     <head>
         <title>Physarum</title>
+        <link rel="icon" href="http://localhost:8080/build/icon.jpg">
 
         <style>
             body { margin: 0; }
@@ -98,6 +99,9 @@
                 });
 
                 cl.onChange(function(value){
+                    window.text.color[0] = value[0];
+                    window.text.color[1] = value[1];
+                    window.text.color[2] = value[2];
                     refresh_points();
                 });
 
@@ -112,6 +116,12 @@
             };
 
 
+            /**
+             * Sends a request to the url and returns parsed response
+             * 
+             * @param The url of a server for request
+             * @returns Server response as parsed json object
+             */
             function httpGet(theUrl) {
                 var xmlHttp = new XMLHttpRequest();
                 xmlHttp.open("GET", theUrl, false); // false for synchronous request
@@ -143,7 +153,7 @@
 
                 var frame = window.data[FrameId];
                 for (var i = 0; i < frame["x"].length; ++i) {
-                    var color = new THREE.Color("rgb(" + window.text.color[0] + "," + window.text.color[1] + "," + window.text.color[2] + ")");
+                    var color = new THREE.Color("rgb(" + Math.round(window.text.color[0]) + "," + Math.round(window.text.color[1]) + "," + Math.round(window.text.color[2]) + ")");
                     var geometry = new THREE.SphereGeometry(window.text.point_width, 10, 10);
                     var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
 
@@ -293,7 +303,7 @@
             window.data = fileGet("build/saves/" + window.text.current_save + ".json");
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
-                window.stats.begin();
+                window.stats.begin();   
 
                 var trigger = {"status": true};
                 // var trigger = httpGet("http://localhost:8080/get_status");
