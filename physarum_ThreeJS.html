@@ -45,6 +45,7 @@
 
                 this.restart = function () {
                     FrameId = 2;
+                    speed = 1;
                     window.text.play = true;
                     window.arrayOfPoints = [];
 
@@ -151,11 +152,10 @@
                 }
             }
 
+            /*
+             *Given points coordinates (frame) window.scene, and RGB color, adds all particles to a window.scene
+             */
             function renderPoints(frame) {
-                /*
-                Given points coordinates (frame) window.scene, and RGB color, adds all particles to a window.scene
-                */
-
                 for (var i = 0; i < frame["x"].length; ++i) {
                     if (i < window.arrayOfPoints.length) {
                         window.arrayOfPoints[i].position.x = frame["x"][i];
@@ -176,6 +176,9 @@
                         window.arrayOfPoints[i].position.y = frame["y"][i];
                         window.arrayOfPoints[i].position.z = frame["z"][i];
                     }
+                }
+                for (var j = frame["x"].length; j < window.arrayOfPoints.length; ++j) {
+                    window.scene.remove(window.arrayOfPoints[j]);
                 }
             }
 
@@ -198,7 +201,7 @@
 
             window.arrayOfPoints = [];
             var IS_MATRIX = false;
-            window.default_size = 0.01;
+            window.default_size = 0.005;
             var path = "build/textures/concrete_texture.jpg";
             var cubeMaterials = [
                 new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
@@ -270,6 +273,7 @@
             restart();
 
             var FrameId = 1;
+            var speed = 1;
             var start_save = fileGet("/build/saves/names.json")["default_name"];
             var all_saves = fileGet("/build/saves/names.json")["names"];
             window.text = new FizzyText();
@@ -294,8 +298,18 @@
                 // var trigger = httpGet("/get_status");
                 // var window.data = httpGet("/get_frame");
 
-                if (window.text.play && FrameId < window.data.length - 1 && FrameId !== 0) {
-                    FrameId++;
+                if (FrameId === 2) {
+                    speed = 1;
+                    window.text.play = true;
+                    window.arrayOfPoints = [];
+                }
+
+                if (FrameId === window.data.length - 1) {
+                    speed = -1;
+                }
+
+                if (window.text.play && FrameId !== 0) {
+                    FrameId += speed;
                 }
 
                 if (trigger["status"] && window.data.length - 1 !== FrameId) {
