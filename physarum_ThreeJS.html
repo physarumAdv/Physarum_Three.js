@@ -221,7 +221,9 @@
                 window.renderer.setSize(window.innerWidth, window.innerHeight);
 
                 document.body.appendChild(window.renderer.domElement);
-                var controls = new OrbitControls(window.camera, window.renderer.domElement);
+                window.controls = new OrbitControls(window.camera, window.renderer.domElement);
+                window.controls.autoRotate = true;
+                window.controls.autoRotateSpeed = 1;
                 var pmremGenerator = new THREE.PMREMGenerator(window.renderer);
 
                 pmremGenerator.compileEquirectangularShader();
@@ -253,7 +255,7 @@
                         var roughnessMipmapper = new RoughnessMipmapper(window.renderer);
                         var loader = new GLTFLoader().setPath("build/models/");
 
-                        loader.load("cobra.gltf", function (gltf) {
+                        /* loader.load("cobra.gltf", function (gltf) {
                             gltf.scene.traverse(function (child) {
                                 if (child.isMesh) {
                                     roughnessMipmapper.generateMipmaps(child.material);
@@ -264,10 +266,11 @@
                             // window.scene.add(gltf.scene);
                             roughnessMipmapper.dispose();
                             render();
-                        });
+                        }); */
                     });
                 add_textures(IS_MATRIX);
-                window.camera.position.z = -3;
+                window.camera.position.z = -2;
+                window.camera.position.y = 1;
                 window.camera.rotation.y = 3.14;
             }
             restart();
@@ -292,7 +295,8 @@
             window.data = fileGet("/build/saves/" + window.text.current_save + ".json");
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
-                window.stats.begin();   
+                window.stats.begin();
+                window.controls.update();
 
                 var trigger = {"status": true};
                 // var trigger = httpGet("/get_status");
