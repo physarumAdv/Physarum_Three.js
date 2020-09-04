@@ -5,7 +5,7 @@ const path = require("path");
 const nStatic = require("node-static");
 
 const filePath = path.join(__dirname, "physarum_ThreeJS.html");
-var jsFolderFileServer = new nStatic.Server(path.join(__dirname, "build"));
+var jsFolderFileServer = new nStatic.Server(path.join(__dirname, "/build"));
 
 var Data = [];
 var Movie = [];
@@ -56,7 +56,7 @@ function getStatus(req, res) {
 }
 
 function refresh(req, res) {
-    req.url = req.url.replace("/build/", "/");
+    req.url = req.url.replace("/physarum/build/", "/");
     jsFolderFileServer.serve(req, res);
     res.writeHead(200, {"Content-Type": "text/json"});
     res.end(JSON.stringify({"done": true, "status": NewFrame}));
@@ -73,23 +73,23 @@ function main(req, res) {
     var pathname = url.pathname;
 
     switch(true) {
-        case pathname === "/":
+        case pathname === "/physarum":
             index(req, res);
             break;
-        case pathname === "/add_frame":
+        case pathname === "/physarum/add_frame":
             addFrame(req, res);
             break;
-        case pathname === "/get_frame":
+        case pathname === "/physarum/get_frame":
             getFrame(req, res);
             break;
-        case pathname === "/get_status":
+        case pathname === "/physarum/get_status":
             getStatus(req, res);
             break;
-        case pathname === "/refresh":
+        case pathname === "/physarum/refresh":
             refresh(req, res)
             break;
-        case pathname.startsWith("/build/"):
-            req.url = req.url.replace("/build/", "/");
+        case pathname.startsWith("/physarum/build"):
+            req.url = req.url.replace("/physarum/build", "/");
             jsFolderFileServer.serve(req, res);
             break;
         default:

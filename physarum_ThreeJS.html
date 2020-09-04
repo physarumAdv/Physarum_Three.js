@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Physarum</title>
-        <link rel="icon" href="/build/icon.jpg">
+        <link rel="icon" href="/physarum/build/icon.jpg">
 
         <style>
             body { margin: 0; }
@@ -11,17 +11,17 @@
     </head>
 
     <body>
-        <script src="build/stats.min.js"></script>
-        <script src="build/dat.gui.min.js"></script>
+        <script src="physarum/build/stats.min.js"></script>
+        <script src="physarum/build/dat.gui.min.js"></script>
 
 
         <script type="module">
-            import * as THREE from "./build/three.module.js";
+            import * as THREE from "./physarum/build/three.module.js";
 
-            import { OrbitControls } from "./build/OrbitControls.js";
-            import { GLTFLoader } from "./build/GLTFLoader.js";
-            import { RGBELoader } from "./build/RGBELoader.js";
-            import { RoughnessMipmapper } from "./build/RoughnessMipmapper.js";
+            import { OrbitControls } from "./physarum/build/OrbitControls.js";
+            import { GLTFLoader } from "./physarum/build/GLTFLoader.js";
+            import { RGBELoader } from "./physarum/build/RGBELoader.js";
+            import { RoughnessMipmapper } from "./physarum/build/RoughnessMipmapper.js";
 
 
             const FizzyText = function () {
@@ -202,7 +202,7 @@
             window.arrayOfPoints = [];
             var IS_MATRIX = false;
             window.default_size = 0.005;
-            var path = "build/textures/concrete_texture.jpg";
+            var path = "physarum/build/textures/concrete_texture.jpg";
             var cubeMaterials = [
                 new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
                 new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // LEFT SIDE
@@ -222,8 +222,8 @@
 
                 document.body.appendChild(window.renderer.domElement);
                 window.controls = new OrbitControls(window.camera, window.renderer.domElement);
-                window.controls.autoRotate = true;
-                window.controls.autoRotateSpeed = 1;
+                // window.controls.autoRotate = true;
+                // window.controls.autoRotateSpeed = 1;
                 var pmremGenerator = new THREE.PMREMGenerator(window.renderer);
 
                 pmremGenerator.compileEquirectangularShader();
@@ -240,7 +240,7 @@
                 // 3D models loader
                 new RGBELoader()
                     .setDataType(THREE.UnsignedByteType)
-                    .setPath("build/models/")
+                    .setPath("physarum/build/models/")
                     .load("royal_esplanade_1k.hdr", function (texture) {
 
                         var envMap = pmremGenerator.fromEquirectangular(texture).texture;
@@ -270,15 +270,15 @@
                     });
                 add_textures(IS_MATRIX);
                 window.camera.position.z = -2;
-                window.camera.position.y = 1;
+                // window.camera.position.y = 1;
                 window.camera.rotation.y = 3.14;
             }
             restart();
 
             var FrameId = 1;
             var speed = 1;
-            var start_save = fileGet("/build/saves/names.json")["default_name"];
-            var all_saves = fileGet("/build/saves/names.json")["names"];
+            var start_save = fileGet("/physarum/build/saves/names.json")["default_name"];
+            var all_saves = fileGet("/physarum/build/saves/names.json")["names"];
             window.text = new FizzyText();
 
             // game logic
@@ -292,11 +292,11 @@
             };
 
             // run game loop (update, render, repeat)
-            window.data = fileGet("/build/saves/" + window.text.current_save + ".json");
+            window.data = fileGet("/physarum/build/saves/" + window.text.current_save + ".json");
             var GameLoop = function() {
                 requestAnimationFrame(GameLoop);
                 window.stats.begin();
-                window.controls.update();
+                // window.controls.update();
 
                 var trigger = {"status": true};
                 // var trigger = httpGet("/get_status");
