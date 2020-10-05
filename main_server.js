@@ -41,13 +41,13 @@ function addFrame(req, res) {
             return console.log(err);
         }
     }); 
-    NewFrame = true
+    NewFrame = true;
 }
 
 function getFrame(req, res) {
     res.writeHead(200, {"Content-Type": "text/json"});
     res.end(JSON.stringify(Data));
-    NewFrame = false
+    NewFrame = false;
 }
 
 function getStatus(req, res) {
@@ -86,7 +86,7 @@ function main(req, res) {
             getStatus(req, res);
             break;
         case pathname === "/physarum/refresh":
-            refresh(req, res)
+            refresh(req, res);
             break;
         case pathname.startsWith("/physarum/build"):
             req.url = req.url.replace("/physarum/build", "/");
@@ -98,6 +98,6 @@ function main(req, res) {
     }
 }
 
-app = http.createServer(main);
+var app = http.createServer(main);
 app.listen(8080);
 console.log("Listening on 8080");
