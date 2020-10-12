@@ -5,10 +5,11 @@ const path = require("path");
 const nStatic = require("node-static");
 
 const filePath = path.join(__dirname, "physarum_ThreeJS.html");
-var jsFolderFileServer = new nStatic.Server(path.join(__dirname, "/build"));
+var libsFileServer = new nStatic.Server(path.join(__dirname, "/lib"));
+var scriptsFileServer = new nStatic.Server(path.join(__dirname, "/scripts"));
+
 
 var Data = [];
-var Movie = [];
 var NewFrame = false;
 
 function index(req, res) {
@@ -35,12 +36,6 @@ function addFrame(req, res) {
         res.end(JSON.stringify({"ok": true}));
     });
 
-    Movie.push(Data);
-    fs.writeFile("build/saves/new_save.json", JSON.stringify(Movie), "utf8", function (err) {
-        if (err) {
-            return console.log(err);
-        }
-    }); 
     NewFrame = true;
 }
 
@@ -51,13 +46,6 @@ function getFrame(req, res) {
 }
 
 function getStatus(req, res) {
-    res.writeHead(200, {"Content-Type": "text/json"});
-    res.end(JSON.stringify({"done": true, "status": NewFrame}));
-}
-
-function refresh(req, res) {
-    req.url = req.url.replace("/physarum/build/", "/");
-    jsFolderFileServer.serve(req, res);
     res.writeHead(200, {"Content-Type": "text/json"});
     res.end(JSON.stringify({"done": true, "status": NewFrame}));
 }
@@ -73,24 +61,25 @@ function main(req, res) {
     var pathname = url.pathname;
 
     switch(true) {
-        case pathname === "/physarum":
+        case pathname === "/":
             index(req, res);
             break;
-        case pathname === "/physarum/add_frame":
+        case pathname === "/add_frame":
             addFrame(req, res);
             break;
-        case pathname === "/physarum/get_frame":
+        case pathname === "/get_frame":
             getFrame(req, res);
             break;
-        case pathname === "/physarum/get_status":
+        case pathname === "/get_status":
             getStatus(req, res);
             break;
-        case pathname === "/physarum/refresh":
-            refresh(req, res);
+        case pathname.startsWith("/lib"):
+            req.url = req.url.replace("/lib", "/");
+            libsFileServer.serve(req, res);
             break;
-        case pathname.startsWith("/physarum/build"):
-            req.url = req.url.replace("/physarum/build", "/");
-            jsFolderFileServer.serve(req, res);
+        case pathname.startsWith("/scripts"):
+            req.url = req.url.replace("/scripts", "/");
+            scriptsFileServer.serve(req, res);
             break;
         default:
             error404(req, res);
