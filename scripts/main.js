@@ -6,98 +6,6 @@ import { RGBELoader } from "../lib/RGBELoader.js";
 import { RoughnessMipmapper } from "../lib/RoughnessMipmapper.js";
 
 
-const FizzyText = function () {
-    this.particles = "0";
-    this.color = [255, 255, 0]; // RGB array
-    this.point_width = 1;
-
-    this.time = 0;
-    this.mode = "offline";
-
-    this.draw_cube = true;
-    this.play = true;
-    this.turn_on = false;
-    this.current_save = start_save;
-
-    this.reset_defaults = function () {
-        /* Here is the update */
-        for (var i = 0; i < window.gui.__controllers.length; i++) {
-            window.gui.__controllers[i].setValue(gui.__controllers[i].initialValue);
-        }
-    };
-
-    this.restart = function () {
-        FrameId = 2;
-        speed = 1;
-        window.text.play = true;
-        window.arrayOfPoints = [];
-
-        // clear window.scene from points
-        while (window.scene.children.length > 2) {
-            var selectedObject = window.scene.getObjectByName("point");
-            window.scene.remove(selectedObject);
-        }
-    };
-};
-
-
-window.onload = function() {
-    window.text = new FizzyText();
-    window.gui = new dat.GUI({
-        load: JSON,
-        preset: "Flow"
-    });
-    window.gui.remember(window.text);
-    window.gui.add(window.text, "particles").name("Particles").listen();
-
-    var cl = window.gui.addColor(window.text, "color").name("Color");
-
-    var size = window.gui.add(window.text, "point_width", 0.1, 2).name("Point width");
-    var mode_chooser = window.gui.add(window.text, "mode", ["offline", "online"]).name("Mode");
-    window.gui.add(window.text, "reset_defaults").name("Reset defaults");   
-
-    var playback = window.gui.addFolder("Playback");
-    var pcontrol = playback.add(window.text, "play").name("Play").listen();
-    playback.add(window.text, "restart").name("Restart");
-
-    var chooser = playback.add(window.text, "current_save", all_saves).name("Choose save");
-
-    playback.open();
-
-
-    mode_chooser.onChange(function(value) {
-        FrameId = 2;
-        window.text.play = true;
-        while (window.scene.children.length > 5) {
-            var selectedObject = window.scene.getObjectByName("point");
-            window.scene.remove(selectedObject);
-        }
-        window.arrayOfPoints = [];
-    });
-
-    chooser.onChange(function(value) {
-        FrameId = 2;
-        window.text.play = true;
-        while (window.scene.children.length > 5) {
-            var selectedObject = window.scene.getObjectByName("point");
-            window.scene.remove(selectedObject);
-        }
-        window.arrayOfPoints = [];
-        window.data = fileGet("lib/saves/" + window.text.current_save + ".json");
-    });
-
-    size.onChange(function(value){
-        refresh_points();
-    });
-
-    cl.onChange(function(value){
-        window.text.color[0] = value[0];
-        window.text.color[1] = value[1];
-        window.text.color[2] = value[2];
-        refresh_points();
-    });
-};
-
 
 /**
  * Sends a request to the url and returns parsed response
@@ -105,14 +13,15 @@ window.onload = function() {
  * @param The url of a server for request
  * @returns Server response as parsed json object
  */
-function httpGet(theUrl) {
+function http_get(theUrl) {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("GET", theUrl, false); // false for synchronous request
     xmlHttp.send(null);
     return JSON.parse(xmlHttp.responseText);
 }
 
-function fileGet(file_name) {
+
+function file_get(file_name) {
     var rawFile = new XMLHttpRequest();
     var allText = "";
     rawFile.open("GET", file_name, false);
@@ -127,9 +36,22 @@ function fileGet(file_name) {
     return JSON.parse(allText);
 }
 
+
+function initStats() {
+    window.stats = new Stats();
+    window.stats.setMode(0); // 0: fps, 1: ms
+
+    // Align top-left
+    window.stats.domElement.style.position = "absolute";
+    window.stats.domElement.style.left = "0px";
+    window.stats.domElement.style.top = "0px";
+    document.body.appendChild( stats.dom );
+    return stats;
+}
+
+
 function refresh_points() {
-    var frame = window.data[FrameId];
-    for (var i = 0; i < frame["x"].length; ++i) {
+    for (var i = 0; i < window.arrayOfPoints.length; ++i) {
         window.arrayOfPoints[i].material.color.r = window.text.color[0] / 255;
         window.arrayOfPoints[i].material.color.g = window.text.color[1] / 255;
         window.arrayOfPoints[i].material.color.b = window.text.color[2] / 255;
@@ -138,10 +60,11 @@ function refresh_points() {
     }
 }
 
+
 /*
  *Given points coordinates (frame) window.scene, and RGB color, adds all particles to a window.scene
  */
-function renderPoints(frame) {
+function render_points(frame) {
     for (var i = 0; i < frame["x"].length; ++i) {
         if (i < window.arrayOfPoints.length) {
             window.arrayOfPoints[i].position.x = frame["x"][i];
@@ -169,7 +92,7 @@ function renderPoints(frame) {
 }
 
 
-function add_textures() {
+function add_polyhedron() {
     var verticesOfCube = [
         -1,-1,-1,    1,-1,-1,    1, 1,-1,    -1, 1,-1,
         -1,-1, 1,    1,-1, 1,    1, 1, 1,    -1, 1, 1,
@@ -214,19 +137,7 @@ function add_textures() {
 }
 
 
-window.arrayOfPoints = [];
-window.default_size = 0.005;
-var path = "lib/textures/concrete_texture.jpg";
-var cubeMaterials = [
-    new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // RIGHT SIDE
-    new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // LEFT SIDE
-    new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // TOP SIDE
-    new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // BOTTOM SIDE
-    new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide}), // FRONT SIDE
-    new THREE.MeshLambertMaterial({map: new THREE.TextureLoader().load(path), side: THREE.DoubleSide})  // BACK SIDE
-];
-
-function restart() {
+function init() {
     window.scene = new THREE.Scene();
     window.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     window.stats = initStats();
@@ -251,78 +162,165 @@ function restart() {
     });
 
 
-    add_textures();
+    add_polyhedron();
     window.camera.position.z = -2;
     window.camera.position.y = 1.1;
     window.camera.rotation.y = 3.14;
     window.camera.rotation.x = 0.5;
 }
-restart();
 
-var FrameId = 1;
-var speed = 1;
-var start_save = fileGet("/lib/saves/names.json")["default_name"];
-var all_saves = fileGet("/lib/saves/names.json")["names"];
 
-window.text = new FizzyText();
 
-// draw scene
-var render = function() {
-    window.renderer.render(window.scene, window.camera);    
-};
 
-// run game loop (update, render, repeat)
-window.data = fileGet("/lib/saves/" + window.text.current_save + ".json");
-var GameLoop = function() {
-    requestAnimationFrame(GameLoop);
-    window.stats.begin();
-    window.controls.update();
+window.onload = function() {
+    const FizzyText = function () {
+        this.particles = "0";
+        this.color = [255, 255, 0]; // RGB array
+        this.point_width = 1;
 
-    if (window.text.mode == "offline") {
-        var trigger = {"status": true};
-    } else {
-        var trigger = httpGet("/get_status");
-        window.data = httpGet("/get_frame");
-    }
+        this.time = 0;
+        this.mode = "offline";
 
-    if (FrameId === 2) {
-        speed = 1;
+        this.draw_cube = true;
+        this.play = true;
+        this.turn_on = false;
+        this.current_save = file_get("/lib/saves/names.json")["default_name"];
+
+        this.reset_defaults = function () {
+            for (var i = 0; i < window.gui.__controllers.length; i++) {
+                window.gui.__controllers[i].setValue(gui.__controllers[i].initialValue);
+            }
+        };
+
+        this.restart = function () {
+            FrameId = 2;
+            speed = 1;
+            window.text.play = true;
+            window.arrayOfPoints = [];
+
+            // clear window.scene from points
+            while (window.scene.children.length > 5) {
+                var selectedObject = window.scene.getObjectByName("point");
+                window.scene.remove(selectedObject);
+            }
+        };
+    };
+
+    var FrameId = 1;
+    var speed = 1;
+    window.arrayOfPoints = [];
+    window.default_size = 0.005;
+
+    var all_saves = file_get("/lib/saves/names.json")["names"];
+
+    window.text = new FizzyText();
+    window.gui = new dat.GUI({
+        load: JSON,
+        preset: "Flow"
+    });
+
+    window.gui.remember(window.text);
+    window.gui.add(window.text, "particles").name("Particles").listen();
+    var cl = window.gui.addColor(window.text, "color").name("Color");
+    var size = window.gui.add(window.text, "point_width", 0.1, 2).name("Point width");
+    var mode_chooser = window.gui.add(window.text, "mode", ["offline", "online"]).name("Mode");
+    window.gui.add(window.text, "reset_defaults").name("Reset defaults");
+
+    var playback = window.gui.addFolder("Playback");
+    var pcontrol = playback.add(window.text, "play").name("Play").listen();
+    playback.add(window.text, "restart").name("Restart");
+    var chooser = playback.add(window.text, "current_save", all_saves).name("Choose save");
+
+    playback.open();
+
+
+    mode_chooser.onChange(function(value) {
+        if (value == "offline") { window.data = file_get("lib/saves/" + window.text.current_save + ".json"); }
+        FrameId = 2;
         window.text.play = true;
-        window.arrayOfPoints = [];
-    }
-
-    if (FrameId === window.data.length - 1) {
-        speed = -1;
-    }
-
-    if (window.text.play && FrameId !== 0) {
-        FrameId += speed;
-    }
-
-    if (trigger["status"] && window.data.length - 1 !== FrameId) {
-        if (window.text.mode == "offline") {
-            window.text.particles = window.data[FrameId]["x"].length;
-            renderPoints(window.data[FrameId]);
-        } else {
-            window.text.particles = window.data["x"].length;
-            renderPoints(window.data);
+        while (window.scene.children.length > 5) {
+            var selectedObject = window.scene.getObjectByName("point");
+            window.scene.remove(selectedObject);
         }
-    }
+        window.arrayOfPoints = [];
 
-    render();
-    window.stats.end();
+    });
+
+    chooser.onChange(function(value) {
+        FrameId = 2;
+        window.text.play = true;
+        while (window.scene.children.length > 5) {
+            var selectedObject = window.scene.getObjectByName("point");
+            window.scene.remove(selectedObject);
+        }
+        window.arrayOfPoints = [];
+        window.data = file_get("lib/saves/" + window.text.current_save + ".json");
+    });
+
+    size.onChange(function(value){
+        refresh_points();
+    });
+
+    cl.onChange(function(value){
+        window.text.color[0] = value[0];
+        window.text.color[1] = value[1];
+        window.text.color[2] = value[2];
+        refresh_points();
+    });
+
+    init();
+
+    // draw scene
+    var render = function() {
+        window.renderer.render(window.scene, window.camera);    
+    };
+
+    // run game loop (update, render, repeat)
+    window.data = file_get("/lib/saves/" + window.text.current_save + ".json");
+    var GameLoop = function() {
+        requestAnimationFrame(GameLoop);
+        window.stats.begin();
+        window.controls.update();
+
+        if (window.text.mode == "offline") {
+            var trigger = {"status": true};
+        } else {
+            var trigger = http_get("/get_status");
+            window.data = http_get("/get_frame");
+        }
+
+        if (FrameId === 2 && window.text.mode == "offline") {
+            speed = 1;
+            window.text.play = true;
+            window.arrayOfPoints = [];
+            while (window.scene.children.length > 5) {
+                var selectedObject = window.scene.getObjectByName("point");
+                window.scene.remove(selectedObject);
+            }
+        }
+
+        if (FrameId === window.data.length - 1) {
+            speed = -1;
+        }
+
+        if (window.text.play && FrameId !== 0 && window.text.mode == "offline") {
+            FrameId += speed;
+        }
+
+        if (trigger["status"] && window.data.length - 1 !== FrameId) {
+            if (window.text.mode == "offline") {
+                window.text.particles = window.data[FrameId]["x"].length;
+                render_points(window.data[FrameId]);
+            } else {
+                window.text.particles = window.data["x"].length;
+                render_points(window.data);
+            }
+        }
+
+        render();
+        window.stats.end();
+    };
+
+
+    GameLoop(window.scene);
 };
-
-
-GameLoop(window.scene);
-function initStats() {
-    window.stats = new Stats();
-    window.stats.setMode(0); // 0: fps, 1: ms
-
-    // Align top-left
-    window.stats.domElement.style.position = "absolute";
-    window.stats.domElement.style.left = "0px";
-    window.stats.domElement.style.top = "0px";
-    document.body.appendChild( stats.dom );
-    return stats;
-}
