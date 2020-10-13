@@ -13,7 +13,7 @@ import { RoughnessMipmapper } from "../lib/RoughnessMipmapper.js";
  * @param The url of a server for request
  * @returns Server response as parsed json object
  */
-function http_get(theUrl) {
+function httpGet(theUrl) {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("GET", theUrl, false); // false for synchronous request
     xmlHttp.send(null);
@@ -21,7 +21,7 @@ function http_get(theUrl) {
 }
 
 
-function file_get(file_name) {
+function fileGet(file_name) {
     var rawFile = new XMLHttpRequest();
     var allText = "";
     rawFile.open("GET", file_name, false);
@@ -37,62 +37,62 @@ function file_get(file_name) {
 }
 
 
-function initStats() {
-    window.stats = new Stats();
-    window.stats.setMode(0); // 0: fps, 1: ms
+function initStats(Stats) {
+    var stats = new Stats();
+    stats.setMode(0); // 0: fps, 1: ms
 
     // Align top-left
-    window.stats.domElement.style.position = "absolute";
-    window.stats.domElement.style.left = "0px";
-    window.stats.domElement.style.top = "0px";
+    stats.domElement.style.position = "absolute";
+    stats.domElement.style.left = "0px";
+    stats.domElement.style.top = "0px";
     document.body.appendChild( stats.dom );
     return stats;
 }
 
 
-function refresh_points() {
-    for (var i = 0; i < window.arrayOfPoints.length; ++i) {
-        window.arrayOfPoints[i].material.color.r = window.text.color[0] / 255;
-        window.arrayOfPoints[i].material.color.g = window.text.color[1] / 255;
-        window.arrayOfPoints[i].material.color.b = window.text.color[2] / 255;
+function refreshArrayOfPoints(fizzyText, arrayOfPoints) {
+    for (var i = 0; i < arrayOfPoints.length; ++i) {
+        arrayOfPoints[i].material.color.r = fizzyText.color[0] / 255;
+        arrayOfPoints[i].material.color.g = fizzyText.color[1] / 255;
+        arrayOfPoints[i].material.color.b = fizzyText.color[2] / 255;
 
-        window.arrayOfPoints[i].scale.set(window.text.point_width, window.text.point_width, window.text.point_width);
+        arrayOfPoints[i].scale.set(fizzyText.pointWidth, fizzyText.pointWidth, fizzyText.pointWidth);
     }
 }
 
 
 /*
- *Given points coordinates (frame) window.scene, and RGB color, adds all particles to a window.scene
+ *Given points coordinates (frame) scene, and RGB color, adds all particles to a scene
  */
-function render_points(frame) {
+function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
     for (var i = 0; i < frame["x"].length; ++i) {
-        if (i < window.arrayOfPoints.length) {
-            window.arrayOfPoints[i].position.x = frame["x"][i];
-            window.arrayOfPoints[i].position.y = frame["y"][i];
-            window.arrayOfPoints[i].position.z = frame["z"][i];
+        if (i < arrayOfPoints.length) {
+            arrayOfPoints[i].position.x = frame["x"][i];
+            arrayOfPoints[i].position.y = frame["y"][i];
+            arrayOfPoints[i].position.z = frame["z"][i];
         } else {
-            var color = new THREE.Color("rgb(" + Math.round(window.text.color[0]) + "," + Math.round(window.text.color[1]) + "," + Math.round(window.text.color[2]) + ")");
+            var color = new THREE.Color("rgb(" + Math.round(fizzyText.color[0]) + "," + Math.round(fizzyText.color[1]) + "," + Math.round(fizzyText.color[2]) + ")");
             var geometry = new THREE.SphereGeometry(window.default_size, 10, 10);
             var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
 
             var point = new THREE.Mesh(geometry, material);
-            point.scale.set(window.text.point_width, window.text.point_width, window.text.point_width);
+            point.scale.set(fizzyText.pointWidth, fizzyText.pointWidth, fizzyText.pointWidth);
             point.name = "point";
-            window.scene.add(point);
-            window.arrayOfPoints.push(point);
+            scene.add(point);
+            arrayOfPoints.push(point);
             
-            window.arrayOfPoints[i].position.x = frame["x"][i];
-            window.arrayOfPoints[i].position.y = frame["y"][i];
-            window.arrayOfPoints[i].position.z = frame["z"][i];
+            arrayOfPoints[i].position.x = frame["x"][i];
+            arrayOfPoints[i].position.y = frame["y"][i];
+            arrayOfPoints[i].position.z = frame["z"][i];
         }
     }
-    for (var j = frame["x"].length; j < window.arrayOfPoints.length; ++j) {
-        window.scene.remove(window.arrayOfPoints[j]);
+    for (var j = frame["x"].length; j < arrayOfPoints.length; ++j) {
+        scene.remove(arrayOfPoints[j]);
     }
 }
 
 
-function add_polyhedron() {
+function addPolyhedron(scene) {
     var verticesOfCube = [
         -1,-1,-1,    1,-1,-1,    1, 1,-1,    -1, 1,-1,
         -1,-1, 1,    1,-1, 1,    1, 1, 1,    -1, 1, 1,
@@ -111,62 +111,63 @@ function add_polyhedron() {
     var geometry = new THREE.PolyhedronGeometry(verticesOfCube, indicesOfFaces, 1 - 0.14, 0);
     var material = new THREE.MeshPhongMaterial({color: 0x0066CC});
     var cube = new THREE.Mesh(geometry, material);
-    window.scene.add(cube);
+    scene.add(cube);
 
 
-    var geometry = new THREE.PolyhedronGeometry(verticesOfCube, indicesOfFaces, 1.001 - 0.14, 0);
-    var material = new THREE.MeshPhongMaterial({color: 0xFFFFFF, wireframe: true});
-    var cube = new THREE.Mesh(geometry, material);
-    window.scene.add(cube);
+    geometry = new THREE.PolyhedronGeometry(verticesOfCube, indicesOfFaces, 1.001 - 0.14, 0);
+    material = new THREE.MeshPhongMaterial({color: 0xFFFFFF, wireframe: true});
+    cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
 
     var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
     directionalLight.position.x = 6;
     directionalLight.position.y = 8;
     directionalLight.position.z = 8;
-    window.scene.add(directionalLight);
+    scene.add(directionalLight);
 
-    var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
+    directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
     directionalLight.position.x = -6;
     directionalLight.position.y = -8;
     directionalLight.position.z = -8;
-    window.scene.add(directionalLight);
+    scene.add(directionalLight);
 
     // light
     var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.8);
-    window.scene.add(ambientLight);
+    scene.add(ambientLight);
 }
 
 
 function init() {
-    window.scene = new THREE.Scene();
-    window.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    window.stats = initStats();
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-    window.renderer = new THREE.WebGLRenderer({antialias: true});
-    window.renderer.setSize(window.innerWidth, window.innerHeight);
+    var renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-    document.body.appendChild(window.renderer.domElement);
-    window.controls = new OrbitControls(window.camera, window.renderer.domElement);
-    // window.controls.autoRotate = true;
-    // window.controls.autoRotateSpeed = 3;
-    var pmremGenerator = new THREE.PMREMGenerator(window.renderer);
+    document.body.appendChild(renderer.domElement);
+    var controls = new OrbitControls(camera, renderer.domElement);
+    // controls.autoRotate = true;
+    // controls.autoRotateSpeed = 3;
+    var pmremGenerator = new THREE.PMREMGenerator(renderer);
 
     pmremGenerator.compileEquirectangularShader();
 
     window.addEventListener("resize", function () {
         var width = window.innerWidth;
         var height = window.innerHeight;
-        window.renderer.setSize(width, height);
-        window.camera.aspect = width / height;
-        window.camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
     });
 
 
-    add_polyhedron();
-    window.camera.position.z = -2;
-    window.camera.position.y = 1.1;
-    window.camera.rotation.y = 3.14;
-    window.camera.rotation.x = 0.5;
+    addPolyhedron(scene);
+    camera.position.z = -2;
+    camera.position.y = 1.1;
+    camera.rotation.y = 3.14;
+    camera.rotation.x = 0.5;
+
+    return [scene, renderer, camera, controls]
 }
 
 
@@ -176,151 +177,150 @@ window.onload = function() {
     const FizzyText = function () {
         this.particles = "0";
         this.color = [255, 255, 0]; // RGB array
-        this.point_width = 1;
+        this.pointWidth = 1;
 
         this.time = 0;
         this.mode = "offline";
 
-        this.draw_cube = true;
+        this.drawCube = true;
         this.play = true;
-        this.turn_on = false;
-        this.current_save = file_get("/lib/saves/names.json")["default_name"];
+        this.turnOn = false;
+        this.currentSave = fileGet("/lib/saves/names.json")["default_name"];
 
         this.reset_defaults = function () {
-            for (var i = 0; i < window.gui.__controllers.length; i++) {
-                window.gui.__controllers[i].setValue(gui.__controllers[i].initialValue);
+            for (var i = 0; i < gui.__controllers.length; i++) {
+                gui.__controllers[i].setValue(gui.__controllers[i].initialValue);
             }
         };
 
         this.restart = function () {
             FrameId = 2;
             speed = 1;
-            window.text.play = true;
-            window.arrayOfPoints = [];
+            fizzyText.play = true;
+            arrayOfPoints = [];
 
-            // clear window.scene from points
-            while (window.scene.children.length > 5) {
-                var selectedObject = window.scene.getObjectByName("point");
-                window.scene.remove(selectedObject);
+            // clear scene from points
+            while (scene.children.length > 5) {
+                var selectedObject = scene.getObjectByName("point");
+                scene.remove(selectedObject);
             }
         };
     };
 
-    var FrameId = 1;
-    var speed = 1;
-    window.arrayOfPoints = [];
+    var FrameId = 1, speed = 1, arrayOfPoints = [], data;
     window.default_size = 0.005;
 
-    var all_saves = file_get("/lib/saves/names.json")["names"];
+    var allSaves = fileGet("/lib/saves/names.json")["names"];
+    var stats = initStats(Stats);
 
-    window.text = new FizzyText();
-    window.gui = new dat.GUI({
+    // Dat Gui controls setup
+    var fizzyText = new FizzyText();
+    var gui = new dat.GUI({
         load: JSON,
         preset: "Flow"
     });
 
-    window.gui.remember(window.text);
-    window.gui.add(window.text, "particles").name("Particles").listen();
-    var cl = window.gui.addColor(window.text, "color").name("Color");
-    var size = window.gui.add(window.text, "point_width", 0.1, 2).name("Point width");
-    var mode_chooser = window.gui.add(window.text, "mode", ["offline", "online"]).name("Mode");
-    window.gui.add(window.text, "reset_defaults").name("Reset defaults");
+    gui.remember(fizzyText);
+    gui.add(fizzyText, "particles").name("Particles").listen();
+    var cl = gui.addColor(fizzyText, "color").name("Color");
+    var size = gui.add(fizzyText, "pointWidth", 0.1, 2).name("Point width");
+    var mode_chooser = gui.add(fizzyText, "mode", ["offline", "online"]).name("Mode");
+    gui.add(fizzyText, "reset_defaults").name("Reset defaults");
 
-    var playback = window.gui.addFolder("Playback");
-    var pcontrol = playback.add(window.text, "play").name("Play").listen();
-    playback.add(window.text, "restart").name("Restart");
-    var chooser = playback.add(window.text, "current_save", all_saves).name("Choose save");
+    var playback = gui.addFolder("Playback");
+    var pcontrol = playback.add(fizzyText, "play").name("Play").listen();
+    playback.add(fizzyText, "restart").name("Restart");
+    var chooser = playback.add(fizzyText, "currentSave", allSaves).name("Choose save");
 
     playback.open();
 
 
     mode_chooser.onChange(function(value) {
-        if (value == "offline") { window.data = file_get("lib/saves/" + window.text.current_save + ".json"); }
+        if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json"); }
         FrameId = 2;
-        window.text.play = true;
-        while (window.scene.children.length > 5) {
-            var selectedObject = window.scene.getObjectByName("point");
-            window.scene.remove(selectedObject);
+        fizzyText.play = true;
+        while (scene.children.length > 5) {
+            var selectedObject = scene.getObjectByName("point");
+            scene.remove(selectedObject);
         }
-        window.arrayOfPoints = [];
+        arrayOfPoints = [];
 
     });
 
     chooser.onChange(function(value) {
         FrameId = 2;
-        window.text.play = true;
-        while (window.scene.children.length > 5) {
-            var selectedObject = window.scene.getObjectByName("point");
-            window.scene.remove(selectedObject);
+        fizzyText.play = true;
+        while (scene.children.length > 5) {
+            var selectedObject = scene.getObjectByName("point");
+            scene.remove(selectedObject);
         }
-        window.arrayOfPoints = [];
-        window.data = file_get("lib/saves/" + window.text.current_save + ".json");
+        arrayOfPoints = [];
+        data = fileGet("lib/saves/" + fizzyText.currentSave + ".json");
     });
 
-    size.onChange(function(value){
-        refresh_points();
+    size.onChange(function(value) {
+        refreshArrayOfPoints(fizzyText, arrayOfPoints);
     });
 
-    cl.onChange(function(value){
-        window.text.color[0] = value[0];
-        window.text.color[1] = value[1];
-        window.text.color[2] = value[2];
-        refresh_points();
+    cl.onChange(function(value) {
+        fizzyText.color[0] = value[0];
+        fizzyText.color[1] = value[1];
+        fizzyText.color[2] = value[2];
+        refreshArrayOfPoints(fizzyText, arrayOfPoints);
     });
 
-    init();
 
-    // draw scene
-    var render = function() {
-        window.renderer.render(window.scene, window.camera);    
-    };
+
+    var tmp = init();
+    var scene = tmp[0];
+    var renderer = tmp[1];
+    var camera = tmp[2];
+    var controls = tmp[3];
 
     // run game loop (update, render, repeat)
-    window.data = file_get("/lib/saves/" + window.text.current_save + ".json");
+    data = fileGet("/lib/saves/" + fizzyText.currentSave + ".json");
     var GameLoop = function() {
         requestAnimationFrame(GameLoop);
-        window.stats.begin();
-        window.controls.update();
+        stats.begin();
+        controls.update();
 
-        if (window.text.mode == "offline") {
+        if (fizzyText.mode === "offline") {
             var trigger = {"status": true};
         } else {
-            var trigger = http_get("/get_status");
-            window.data = http_get("/get_frame");
+            var trigger = httpGet("/get_status");
+            data = httpGet("/get_frame");
         }
 
-        if (FrameId === 2 && window.text.mode == "offline") {
+        if (FrameId === 2 && fizzyText.mode === "offline") {
             speed = 1;
-            window.text.play = true;
-            window.arrayOfPoints = [];
-            while (window.scene.children.length > 5) {
-                var selectedObject = window.scene.getObjectByName("point");
-                window.scene.remove(selectedObject);
+            fizzyText.play = true;
+            arrayOfPoints = [];
+            while (scene.children.length > 5) {
+                var selectedObject = scene.getObjectByName("point");
+                scene.remove(selectedObject);
             }
         }
 
-        if (FrameId === window.data.length - 1) {
+        if (FrameId === data.length - 1) {
             speed = -1;
         }
 
-        if (window.text.play && FrameId !== 0 && window.text.mode == "offline") {
+        if (fizzyText.play && FrameId !== 0 && fizzyText.mode === "offline") {
             FrameId += speed;
         }
 
-        if (trigger["status"] && window.data.length - 1 !== FrameId) {
-            if (window.text.mode == "offline") {
-                window.text.particles = window.data[FrameId]["x"].length;
-                render_points(window.data[FrameId]);
+        if (trigger["status"] && data.length - 1 !== FrameId) {
+            if (fizzyText.mode === "offline") {
+                fizzyText.particles = data[FrameId]["x"].length;
+                renderPoints(data[FrameId], scene, fizzyText, arrayOfPoints);
             } else {
-                window.text.particles = window.data["x"].length;
-                render_points(window.data);
+                fizzyText.particles = data["x"].length;
+                renderPoints(data, scene, fizzyText, arrayOfPoints);
             }
         }
 
-        render();
-        window.stats.end();
+        renderer.render(scene, camera); 
+        stats.end();
     };
-
-
-    GameLoop(window.scene);
+    GameLoop(scene);
 };
