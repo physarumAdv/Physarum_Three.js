@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const nStatic = require("node-static");
 
-const filePath = path.join(__dirname, "physarum_ThreeJS.html");
+const filePath = path.join(__dirname, "physarum.html");
 var libsFileServer = new nStatic.Server(path.join(__dirname, "/lib"));
 var scriptsFileServer = new nStatic.Server(path.join(__dirname, "/scripts"));
 
@@ -73,11 +73,11 @@ function main(req, res) {
         case pathname === "/get_status":
             getStatus(req, res);
             break;
-        case pathname.startsWith("/lib"):
+        case pathname.startsWith("/lib/"):
             req.url = req.url.replace("/lib", "/");
             libsFileServer.serve(req, res);
             break;
-        case pathname.startsWith("/scripts"):
+        case pathname.startsWith("/scripts/"):
             req.url = req.url.replace("/scripts", "/");
             scriptsFileServer.serve(req, res);
             break;

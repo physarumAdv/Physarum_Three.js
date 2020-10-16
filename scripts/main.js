@@ -1,9 +1,6 @@
 import * as THREE from "../lib/three.module.js";
 
 import { OrbitControls } from "../lib/OrbitControls.js";
-import { GLTFLoader } from "../lib/GLTFLoader.js";
-import { RGBELoader } from "../lib/RGBELoader.js";
-import { RoughnessMipmapper } from "../lib/RoughnessMipmapper.js";
 
 
 
@@ -13,9 +10,9 @@ import { RoughnessMipmapper } from "../lib/RoughnessMipmapper.js";
  * @param The url of a server for request
  * @returns Server response as parsed json object
  */
-function httpGet(theUrl) {
+function httpGet(Url) {
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", theUrl, false); // false for synchronous request
+    xmlHttp.open("GET", Url, false); // false for synchronous request
     xmlHttp.send(null);
     return JSON.parse(xmlHttp.responseText);
 }
@@ -65,18 +62,19 @@ function refreshArrayOfPoints(fizzyText, arrayOfPoints) {
  *Given points coordinates (frame) scene, and RGB color, adds all particles to a scene
  */
 function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
+    var color = new THREE.Color("rgb(" + Math.round(fizzyText.color[0]) + "," + Math.round(fizzyText.color[1]) + "," + Math.round(fizzyText.color[2]) + ")");
+    var geometry = new THREE.SphereGeometry(window.default_size, 10, 10);
+    var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
+
     for (var i = 0; i < frame["x"].length; ++i) {
         if (i < arrayOfPoints.length) {
             arrayOfPoints[i].position.x = frame["x"][i];
             arrayOfPoints[i].position.y = frame["y"][i];
             arrayOfPoints[i].position.z = frame["z"][i];
         } else {
-            var color = new THREE.Color("rgb(" + Math.round(fizzyText.color[0]) + "," + Math.round(fizzyText.color[1]) + "," + Math.round(fizzyText.color[2]) + ")");
-            var geometry = new THREE.SphereGeometry(window.default_size, 10, 10);
-            var material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
-
             var point = new THREE.Mesh(geometry, material);
             point.scale.set(fizzyText.pointWidth, fizzyText.pointWidth, fizzyText.pointWidth);
+
             point.name = "point";
             scene.add(point);
             arrayOfPoints.push(point);
@@ -148,9 +146,6 @@ function init() {
     var controls = new OrbitControls(camera, renderer.domElement);
     // controls.autoRotate = true;
     // controls.autoRotateSpeed = 3;
-    var pmremGenerator = new THREE.PMREMGenerator(renderer);
-
-    pmremGenerator.compileEquirectangularShader();
 
     window.addEventListener("resize", function () {
         var width = window.innerWidth;
@@ -175,7 +170,7 @@ function init() {
 
 window.onload = function() {
     const FizzyText = function () {
-        this.particles = "0";
+        this.num_particles = 0;
         this.color = [255, 255, 0]; // RGB array
         this.pointWidth = 1;
 
@@ -200,7 +195,7 @@ window.onload = function() {
             arrayOfPoints = [];
 
             // clear scene from points
-            while (scene.children.length > 5) {
+            while (scene.getObjectByName("point") !== undefined) {
                 var selectedObject = scene.getObjectByName("point");
                 scene.remove(selectedObject);
             }
@@ -221,8 +216,8 @@ window.onload = function() {
     });
 
     gui.remember(fizzyText);
-    gui.add(fizzyText, "particles").name("Particles").listen();
-    var cl = gui.addColor(fizzyText, "color").name("Color");
+    gui.add(fizzyText, "num_particles").name("Particles").listen();
+    var particles_color = gui.addColor(fizzyText, "color").name("Color");
     var size = gui.add(fizzyText, "pointWidth", 0.1, 2).name("Point width");
     var mode_chooser = gui.add(fizzyText, "mode", ["offline", "online"]).name("Mode");
     gui.add(fizzyText, "reset_defaults").name("Reset defaults");
@@ -239,7 +234,7 @@ window.onload = function() {
         if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json"); }
         FrameId = 2;
         fizzyText.play = true;
-        while (scene.children.length > 5) {
+        while (scene.getObjectByName("point") !== undefined) {
             var selectedObject = scene.getObjectByName("point");
             scene.remove(selectedObject);
         }
@@ -250,7 +245,7 @@ window.onload = function() {
     chooser.onChange(function(value) {
         FrameId = 2;
         fizzyText.play = true;
-        while (scene.children.length > 5) {
+        while (scene.getObjectByName("point") !== undefined) {
             var selectedObject = scene.getObjectByName("point");
             scene.remove(selectedObject);
         }
@@ -262,7 +257,7 @@ window.onload = function() {
         refreshArrayOfPoints(fizzyText, arrayOfPoints);
     });
 
-    cl.onChange(function(value) {
+    particles_color.onChange(function(value) {
         fizzyText.color[0] = value[0];
         fizzyText.color[1] = value[1];
         fizzyText.color[2] = value[2];
@@ -295,7 +290,7 @@ window.onload = function() {
             speed = 1;
             fizzyText.play = true;
             arrayOfPoints = [];
-            while (scene.children.length > 5) {
+            while (scene.getObjectByName("point") !== undefined) {
                 var selectedObject = scene.getObjectByName("point");
                 scene.remove(selectedObject);
             }
@@ -311,10 +306,10 @@ window.onload = function() {
 
         if (trigger["status"] && data.length - 1 !== FrameId) {
             if (fizzyText.mode === "offline") {
-                fizzyText.particles = data[FrameId]["x"].length;
+                fizzyText.num_particles = data[FrameId]["x"].length;
                 renderPoints(data[FrameId], scene, fizzyText, arrayOfPoints);
             } else {
-                fizzyText.particles = data["x"].length;
+                fizzyText.num_particles = data["x"].length;
                 renderPoints(data, scene, fizzyText, arrayOfPoints);
             }
         }
