@@ -9,8 +9,8 @@ var libsFileServer = new nStatic.Server(path.join(__dirname, "/lib"));
 var scriptsFileServer = new nStatic.Server(path.join(__dirname, "/scripts"));
 
 
-var Data = [];
-var NewFrame = false;
+var Data = [], Poly = [];
+var NewFrame = false, NewPoly = false;
 
 function index(req, res) {
     fs.readFile(filePath, {encoding: "utf-8"}, function(err, data) {
@@ -45,6 +45,33 @@ function getFrame(req, res) {
     NewFrame = false;
 }
 
+function addPoly(req, res) {
+    res.writeHead(200, {"Content-Type": "text/json"});
+
+    var body = "";
+    req.on("data", function (chunk) {
+        body += chunk.toString();
+    });
+
+    req.on("end", function() {
+        Poly = JSON.parse(body);
+        res.end(JSON.stringify({"ok": true}));
+    });
+
+    NewPoly = true;
+}
+
+function getPoly(req, res) {
+    res.writeHead(200, {"Content-Type": "text/json"});
+    res.end(JSON.stringify(Poly));
+    NewPoly = false;
+}
+
+function getPolyStatus(req, res) {
+    res.writeHead(200, {"Content-Type": "text/json"});
+    res.end(JSON.stringify({"done": true, "status": NewPoly}));
+}
+
 function getStatus(req, res) {
     res.writeHead(200, {"Content-Type": "text/json"});
     res.end(JSON.stringify({"done": true, "status": NewFrame}));
@@ -72,6 +99,15 @@ function main(req, res) {
             break;
         case pathname === "/get_status":
             getStatus(req, res);
+            break;
+        case pathname === "/add_poly":
+            addPoly(req, res);
+            break;
+        case pathname === "/get_poly":
+            getPoly(req, res);
+            break;
+        case pathname === "/get_poly_status":
+            getPolyStatus(req, res);
             break;
         case pathname.startsWith("/lib/"):
             req.url = req.url.replace("/lib", "/");

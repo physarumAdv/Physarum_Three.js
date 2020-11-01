@@ -1,7 +1,7 @@
 import * as THREE from "../lib/three.module.js";
 
 import { OrbitControls } from "../lib/OrbitControls.js";
-
+import { ConvexGeometry } from '../lib/ConvexGeometry.js';
 
 
 /**
@@ -68,9 +68,9 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
 
     for (var i = 0; i < frame["x"].length; ++i) {
         if (i < arrayOfPoints.length) {
-            arrayOfPoints[i].position.x = frame["x"][i];
-            arrayOfPoints[i].position.y = frame["y"][i];
-            arrayOfPoints[i].position.z = frame["z"][i];
+            arrayOfPoints[i].position.x = frame["x"][i] * 2;
+            arrayOfPoints[i].position.y = frame["y"][i] * 2;
+            arrayOfPoints[i].position.z = frame["z"][i] * 2;
         } else {
             var point = new THREE.Mesh(geometry, material);
             point.scale.set(fizzyText.pointWidth, fizzyText.pointWidth, fizzyText.pointWidth);
@@ -79,9 +79,9 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
             scene.add(point);
             arrayOfPoints.push(point);
             
-            arrayOfPoints[i].position.x = frame["x"][i];
-            arrayOfPoints[i].position.y = frame["y"][i];
-            arrayOfPoints[i].position.z = frame["z"][i];
+            arrayOfPoints[i].position.x = frame["x"][i] * 2;
+            arrayOfPoints[i].position.y = frame["y"][i] * 2;
+            arrayOfPoints[i].position.z = frame["z"][i] * 2;
         }
     }
     for (var j = frame["x"].length; j < arrayOfPoints.length; ++j) {
@@ -90,48 +90,39 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
 }
 
 
-function addPolyhedron(scene) {
-    var verticesOfCube = [
-        -1,-1,-1,    1,-1,-1,    1, 1,-1,    -1, 1,-1,
-        -1,-1, 1,    1,-1, 1,    1, 1, 1,    -1, 1, 1,
-    ];
+function addPolyhedron(scene, data) {
+    if (data == undefined) {
+        var verticesOfCube = [
+            new THREE.Vector3(-1,-1,-1,),
+            new THREE.Vector3(1,-1,-1),
+            new THREE.Vector3(1, 1,-1),
+            new THREE.Vector3(-1, 1,-1),
+            new THREE.Vector3(-1,-1, 1),
+            new THREE.Vector3(1,-1, 1),
+            new THREE.Vector3(1, 1, 1),
+            new THREE.Vector3(-1, 1, 1)
+        ];
+    } else {
+        var verticesOfCube = [];
+        for (var vert of data['vertices']) {
+            verticesOfCube.push(new THREE.Vector3(vert[0], vert[1], vert[2]))
+        }
+    }
 
-    var indicesOfFaces = [
-        2,1,0,    0,3,2,
-        0,4,7,    7,3,0,
-        0,1,5,    5,4,0,
-        1,2,6,    6,5,1,
-        2,3,7,    7,6,2,
-        4,5,6,    6,7,4
-    ];
-
-    // create a material, color or image texture
-    var geometry = new THREE.PolyhedronGeometry(verticesOfCube, indicesOfFaces, 1 - 0.14, 0);
+    var geometry = new ConvexGeometry(verticesOfCube);
     var material = new THREE.MeshPhongMaterial({color: 0x0066CC});
-    var cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.name = "poly";
 
+    scene.add(mesh);
 
-    geometry = new THREE.PolyhedronGeometry(verticesOfCube, indicesOfFaces, 1.001 - 0.14, 0);
-    material = new THREE.MeshPhongMaterial({color: 0xFFFFFF, wireframe: true});
-    cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    var geometry = new ConvexGeometry(verticesOfCube);
+    var material = new THREE.MeshPhongMaterial({color: 0xFFFFFF, wireframe: true});
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.scale.set(1.001, 1.001, 1.001);
+    mesh.name = "wire";
 
-    var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
-    directionalLight.position.x = 6;
-    directionalLight.position.y = 8;
-    directionalLight.position.z = 8;
-    scene.add(directionalLight);
-
-    directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
-    directionalLight.position.x = -6;
-    directionalLight.position.y = -8;
-    directionalLight.position.z = -8;
-    scene.add(directionalLight);
-
-    // light
-    var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.8);
-    scene.add(ambientLight);
+    scene.add(mesh);
 }
 
 
@@ -155,12 +146,24 @@ function init() {
         camera.updateProjectionMatrix();
     });
 
+    addPolyhedron(scene, undefined);
 
-    addPolyhedron(scene);
+    var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
+    directionalLight.position.set(6, 8, 8);
+    scene.add(directionalLight);
+
+    directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
+    directionalLight.position.set(-6, -8, -8);
+    scene.add(directionalLight);
+
+    // light
+    var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.8);
+    scene.add(ambientLight);
+
     camera.position.z = -2;
     camera.position.y = 1.1;
     camera.rotation.y = 3.14;
-    camera.rotation.x = 0.5;
+    camera.rotation.x = 0.6;
 
     return [scene, renderer, camera, controls]
 }
@@ -189,6 +192,10 @@ window.onload = function() {
         };
 
         this.restart = function () {
+            if (fizzyText.mode === "online") {
+                return 0;
+            }
+
             FrameId = 2;
             speed = 1;
             fizzyText.play = true;
@@ -235,14 +242,30 @@ window.onload = function() {
         FrameId = 2;
         fizzyText.play = true;
         while (scene.getObjectByName("point") !== undefined) {
-            var selectedObject = scene.getObjectByName("point");
-            scene.remove(selectedObject);
+            scene.remove(scene.getObjectByName("point"));
         }
+        scene.remove(scene.getObjectByName("poly"));
+        scene.remove(scene.getObjectByName("wire"));
+
+        if (value === "online") {
+            var obj = httpGet("/get_poly");
+            if (obj.length === 0) {
+                console.log('no data');
+            } else {
+                addPolyhedron(scene, httpGet("/get_poly"));
+            }
+        } else {
+            addPolyhedron(scene, undefined);
+        }
+
         arrayOfPoints = [];
 
     });
 
     chooser.onChange(function(value) {
+        if (fizzyText.mode === "online") {
+            return 0;
+        }
         FrameId = 2;
         fizzyText.play = true;
         while (scene.getObjectByName("point") !== undefined) {
@@ -250,6 +273,7 @@ window.onload = function() {
             scene.remove(selectedObject);
         }
         arrayOfPoints = [];
+
         data = fileGet("lib/saves/" + fizzyText.currentSave + ".json");
     });
 
@@ -263,6 +287,7 @@ window.onload = function() {
         fizzyText.color[2] = value[2];
         refreshArrayOfPoints(fizzyText, arrayOfPoints);
     });
+
 
 
 
@@ -286,6 +311,18 @@ window.onload = function() {
             data = httpGet("/get_frame");
         }
 
+        if (httpGet("/get_poly_status")['status'] && fizzyText.mode === "online") {
+            while (scene.getObjectByName("point") !== undefined) {
+                var selectedObject = scene.getObjectByName("point");
+                scene.remove(selectedObject);
+            }
+            scene.remove(scene.getObjectByName("poly"));
+            scene.remove(scene.getObjectByName("wire"));
+            arrayOfPoints = [];
+
+            addPolyhedron(scene, httpGet("/get_poly"));
+        }
+
         if (FrameId === 2 && fizzyText.mode === "offline") {
             speed = 1;
             fizzyText.play = true;
@@ -304,6 +341,7 @@ window.onload = function() {
             FrameId += speed;
         }
 
+        console.log(fizzyText.mode);
         if (trigger["status"] && data.length - 1 !== FrameId) {
             if (fizzyText.mode === "offline") {
                 fizzyText.num_particles = data[FrameId]["x"].length;
