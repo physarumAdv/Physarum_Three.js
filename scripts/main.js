@@ -74,6 +74,12 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
         } else {
             var point = new THREE.Mesh(geometry, material);
             point.scale.set(fizzyText.pointWidth, fizzyText.pointWidth, fizzyText.pointWidth);
+            // if (fizzyText.randomColor) {
+            //     var color = new THREE.Color(0xffffff);
+            //     color.setHex(Math.random() * 0xffffff);
+            //     console.log(color);
+            //     point.material.color = color;
+            // }
 
             point.name = "point";
             scene.add(point);
@@ -93,6 +99,7 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
 function addPolyhedron(scene, data) {
     if (data == undefined) {
         var verticesOfCube = [
+            // Default cube
             new THREE.Vector3(-1,-1,-1,),
             new THREE.Vector3(1,-1,-1),
             new THREE.Vector3(1, 1,-1),
@@ -116,13 +123,12 @@ function addPolyhedron(scene, data) {
 
     scene.add(mesh);
 
-    var geometry = new ConvexGeometry(verticesOfCube);
-    var material = new THREE.MeshPhongMaterial({color: 0xFFFFFF, wireframe: true});
-    var mesh = new THREE.Mesh(geometry, material);
-    mesh.scale.set(1.001, 1.001, 1.001);
-    mesh.name = "wire";
-
-    scene.add(mesh);
+    // var geometry = new ConvexGeometry(verticesOfCube);
+    // var material = new THREE.MeshPhongMaterial({color: 0xFFFFFF, wireframe: true});
+    // var mesh = new THREE.Mesh(geometry, material);
+    // mesh.scale.set(1.001, 1.001, 1.001);
+    // mesh.name = "wire";
+    // scene.add(mesh);
 }
 
 
@@ -148,20 +154,20 @@ function init() {
 
     addPolyhedron(scene, undefined);
 
-    var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
+    // light
+    var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1);
     directionalLight.position.set(6, 8, 8);
     scene.add(directionalLight);
 
-    directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
+    directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1);
     directionalLight.position.set(-6, -8, -8);
     scene.add(directionalLight);
 
-    // light
-    var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.8);
+    var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.7);
     scene.add(ambientLight);
 
-    camera.position.z = -2;
-    camera.position.y = 1.1;
+    camera.position.set(-1.8322212388906485, 1.8319968391289672, -2.6643576380942604);
+
     camera.rotation.y = 3.14;
     camera.rotation.x = 0.6;
 
@@ -175,6 +181,7 @@ window.onload = function() {
     const FizzyText = function () {
         this.num_particles = 0;
         this.color = [255, 255, 0]; // RGB array
+        this.randomColor = false
         this.pointWidth = 1;
 
         this.time = 0;
@@ -210,7 +217,7 @@ window.onload = function() {
     };
 
     var FrameId = 1, speed = 1, arrayOfPoints = [], data;
-    window.default_size = 0.005;
+    window.default_size = 0.007;
 
     var allSaves = fileGet("/lib/saves/names.json")["names"];
     var stats = initStats(Stats);
@@ -226,6 +233,7 @@ window.onload = function() {
     gui.add(fizzyText, "num_particles").name("Particles").listen();
     var particles_color = gui.addColor(fizzyText, "color").name("Color");
     var size = gui.add(fizzyText, "pointWidth", 0.1, 2).name("Point width");
+    // var random_colors = gui.add(fizzyText, "randomColor").name("Random Color");
     var mode_chooser = gui.add(fizzyText, "mode", ["offline", "online"]).name("Mode");
     gui.add(fizzyText, "reset_defaults").name("Reset defaults");
 
@@ -341,7 +349,6 @@ window.onload = function() {
             FrameId += speed;
         }
 
-        console.log(fizzyText.mode);
         if (trigger["status"] && data.length - 1 !== FrameId) {
             if (fizzyText.mode === "offline") {
                 fizzyText.num_particles = data[FrameId]["x"].length;
