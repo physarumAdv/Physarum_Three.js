@@ -174,7 +174,7 @@ function init() {
     var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.7);
     scene.add(ambientLight);
 
-    camera.position.set(-1.8322212388906485, 1.8319968391289672, -2.6643576380942604);
+    camera.position.set(-1.83222123889, 1.83199683912, -2.66435763809);
 
     camera.rotation.y = 3.14;
     camera.rotation.x = 0.6;
@@ -194,6 +194,7 @@ window.onload = function() {
         this.time = 0.0;
         this.mode = "offline";
         this.speedMode = "1.00";
+        this.name = "Pavel Artushkov";
 
         this.drawCube = true;
         this.play = true;
@@ -250,6 +251,8 @@ window.onload = function() {
     var speed = playback.add(fizzyText, "speedMode", ["0.25", "0.5", "0.75", "1.00", "1.25", "1.5", "1.75", "2.00", "5.00", "10.0"]).name("Playback Speed");
     var timeline = playback.add(fizzyText, "time", 0, 1).step(0.01).name("Timeline").listen();
     var chooser = playback.add(fizzyText, "currentSave", allSaves).name("Choose save");
+    var author = gui.add(fizzyText, "name").name("Made by:");
+    author.domElement.style.pointerEvents = "none";
 
     playback.open();
 
