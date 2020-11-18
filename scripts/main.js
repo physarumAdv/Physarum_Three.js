@@ -270,6 +270,7 @@ window.onload = function() {
         scene.remove(scene.getObjectByName("poly"));
 
         if (value === "online") {
+	    playback.close();
             var obj = httpGet("/get_poly");
             if (obj.length === 0) {
                 console.log('No Polyhedron data. Run simulator process or contact admins.');
@@ -277,6 +278,7 @@ window.onload = function() {
                 addPolyhedron(scene, httpGet("/get_poly"));
             }
         } else {
+	    playback.open();
             addPolyhedron(scene, undefined);
         }
 
