@@ -9,7 +9,7 @@ var libsFileServer = new nStatic.Server(path.join(__dirname, "/lib"));
 var scriptsFileServer = new nStatic.Server(path.join(__dirname, "/scripts"));
 
 
-var Data = [], Poly = [];
+var Data = [], Poly = [], Movie = [];
 var NewFrame = false, NewPoly = false;
 
 function index(req, res) {
@@ -36,13 +36,20 @@ function addFrame(req, res) {
         res.end(JSON.stringify({"ok": true}));
     });
 
+    Movie.push(Data);
+    fs.writeFile("lib/saves/default.json", JSON.stringify(Movie), "utf8", function (err) {
+        if (err) {
+            return console.log(err);
+        }
+    }); 
+
     NewFrame = true;
 }
 
 function getFrame(req, res) {
     res.writeHead(200, {"Content-Type": "text/json"});
     res.end(JSON.stringify(Data));
-    NewFrame = false;
+    NewFrame = true;
 }
 
 function addPoly(req, res) {
