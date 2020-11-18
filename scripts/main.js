@@ -2,6 +2,7 @@ import * as THREE from "../lib/three.module.js";
 
 import { OrbitControls } from "../lib/OrbitControls.js";
 import { ConvexGeometry } from '../lib/ConvexGeometry.js';
+import { OBJLoader } from '../lib/OBJLoader.js';
 
 
 /**
@@ -74,12 +75,6 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
         } else {
             var point = new THREE.Mesh(geometry, material);
             point.scale.set(fizzyText.pointWidth, fizzyText.pointWidth, fizzyText.pointWidth);
-            // if (fizzyText.randomColor) {
-            //     var color = new THREE.Color(0xffffff);
-            //     color.setHex(Math.random() * 0xffffff);
-            //     console.log(color);
-            //     point.material.color = color;
-            // }
 
             point.name = "point";
             scene.add(point);
@@ -93,6 +88,7 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
     for (var j = frame["x"].length; j < arrayOfPoints.length; ++j) {
         scene.remove(arrayOfPoints[j]);
     }
+    arrayOfPoints.splice(frame["x"].length, arrayOfPoints.length);
 }
 
 
@@ -111,7 +107,7 @@ function addPolyhedron(scene, data) {
         ];
     } else {
         var verticesOfCube = [];
-        for (var vert of data['vertices']) {
+        for (var vert of data) {
             verticesOfCube.push(new THREE.Vector3(vert[0], vert[1], vert[2]))
         }
     }
@@ -122,13 +118,6 @@ function addPolyhedron(scene, data) {
     mesh.name = "poly";
 
     scene.add(mesh);
-
-    // var geometry = new ConvexGeometry(verticesOfCube);
-    // var material = new THREE.MeshPhongMaterial({color: 0xFFFFFF, wireframe: true});
-    // var mesh = new THREE.Mesh(geometry, material);
-    // mesh.scale.set(1.001, 1.001, 1.001);
-    // mesh.name = "wire";
-    // scene.add(mesh);
 }
 
 
@@ -141,6 +130,7 @@ function init() {
 
     document.body.appendChild(renderer.domElement);
     var controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableKeys = false;
     // controls.autoRotate = true;
     // controls.autoRotateSpeed = 3;
 
@@ -154,6 +144,24 @@ function init() {
 
     addPolyhedron(scene, undefined);
 
+    // const loader = new OBJLoader();
+    // loader.load(
+    //     // resource URL
+    //     'lib/models/sphere.obj',
+    //     // called when resource is loaded
+    //     function ( object ) {
+    //         scene.add( object );
+    //     },
+    //     // called when loading is in progresses
+    //     function ( xhr ) {
+    //         console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+    //     },
+    //     // called when loading has errors
+    //     function ( error ) {
+    //         console.log( 'An error happened' );
+    //     }
+    // );
+
     // light
     var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1);
     directionalLight.position.set(6, 8, 8);
@@ -166,7 +174,7 @@ function init() {
     var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.7);
     scene.add(ambientLight);
 
-    camera.position.set(-1.8322212388906485, 1.8319968391289672, -2.6643576380942604);
+    camera.position.set(-1.83222123889, 1.83199683912, -2.66435763809);
 
     camera.rotation.y = 3.14;
     camera.rotation.x = 0.6;
@@ -181,11 +189,12 @@ window.onload = function() {
     const FizzyText = function () {
         this.num_particles = 0;
         this.color = [255, 255, 0]; // RGB array
-        this.randomColor = false
         this.pointWidth = 1;
 
-        this.time = 0;
+        this.time = 0.0;
         this.mode = "offline";
+        this.speedMode = "1.00";
+        this.name = "Pavel Artushkov";
 
         this.drawCube = true;
         this.play = true;
@@ -204,7 +213,7 @@ window.onload = function() {
             }
 
             FrameId = 2;
-            speed = 1;
+            direction = 1;
             fizzyText.play = true;
             arrayOfPoints = [];
 
@@ -216,7 +225,7 @@ window.onload = function() {
         };
     };
 
-    var FrameId = 1, speed = 1, arrayOfPoints = [], data;
+    var FrameId = 1, direction = 1, arrayOfPoints = [], data;
     window.default_size = 0.007;
 
     var allSaves = fileGet("/lib/saves/names.json")["names"];
@@ -226,24 +235,30 @@ window.onload = function() {
     var fizzyText = new FizzyText();
     var gui = new dat.GUI({
         load: JSON,
-        preset: "Flow"
+        preset: "Flow",
+        width: 300
     });
 
-    gui.remember(fizzyText);
     gui.add(fizzyText, "num_particles").name("Particles").listen();
     var particles_color = gui.addColor(fizzyText, "color").name("Color");
     var size = gui.add(fizzyText, "pointWidth", 0.1, 2).name("Point width");
-    // var random_colors = gui.add(fizzyText, "randomColor").name("Random Color");
     var mode_chooser = gui.add(fizzyText, "mode", ["offline", "online"]).name("Mode");
     gui.add(fizzyText, "reset_defaults").name("Reset defaults");
 
     var playback = gui.addFolder("Playback");
-    var pcontrol = playback.add(fizzyText, "play").name("Play").listen();
+    playback.add(fizzyText, "play").name("Play").listen();
     playback.add(fizzyText, "restart").name("Restart");
+    var speed = playback.add(fizzyText, "speedMode", ["0.25", "0.5", "0.75", "1.00", "1.25", "1.5", "1.75", "2.00", "5.00", "10.0"]).name("Playback Speed");
+    var timeline = playback.add(fizzyText, "time", 0, 1).step(0.01).name("Timeline").listen();
     var chooser = playback.add(fizzyText, "currentSave", allSaves).name("Choose save");
+    var author = gui.add(fizzyText, "name").name("Made by:");
+    author.domElement.style.pointerEvents = "none";
 
     playback.open();
 
+    timeline.onChange(function(value) {
+        FrameId = (data.length) * (value);
+    });
 
     mode_chooser.onChange(function(value) {
         if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json"); }
@@ -253,12 +268,11 @@ window.onload = function() {
             scene.remove(scene.getObjectByName("point"));
         }
         scene.remove(scene.getObjectByName("poly"));
-        scene.remove(scene.getObjectByName("wire"));
 
         if (value === "online") {
             var obj = httpGet("/get_poly");
             if (obj.length === 0) {
-                console.log('no data');
+                console.log('No Polyhedron data. Run simulator process or contact admins.');
             } else {
                 addPolyhedron(scene, httpGet("/get_poly"));
             }
@@ -297,6 +311,19 @@ window.onload = function() {
     });
 
 
+    document.addEventListener("keydown", onDocumentKeyDown, false);
+    function onDocumentKeyDown(event) {
+        var keyCode = event.which;
+        if (keyCode == 32) { // Space
+            fizzyText.play = !fizzyText.play;
+        } else if (keyCode == 39 && FrameId < data.length) { // Left arrow
+            FrameId += 5;
+            fizzyText.time = (FrameId + 1) / data.length;
+        } else if (keyCode == 37 && FrameId > 6) { // Right arrow
+            FrameId -= 5;
+            fizzyText.time = (FrameId + 1) / data.length;
+        }
+    };
 
 
     var tmp = init();
@@ -312,50 +339,49 @@ window.onload = function() {
         stats.begin();
         controls.update();
 
-        if (fizzyText.mode === "offline") {
-            var trigger = {"status": true};
-        } else {
-            var trigger = httpGet("/get_status");
+
+        if (fizzyText.mode === "online") {
+
             data = httpGet("/get_frame");
-        }
-
-        if (httpGet("/get_poly_status")['status'] && fizzyText.mode === "online") {
-            while (scene.getObjectByName("point") !== undefined) {
-                var selectedObject = scene.getObjectByName("point");
-                scene.remove(selectedObject);
-            }
-            scene.remove(scene.getObjectByName("poly"));
-            scene.remove(scene.getObjectByName("wire"));
-            arrayOfPoints = [];
-
-            addPolyhedron(scene, httpGet("/get_poly"));
-        }
-
-        if (FrameId === 2 && fizzyText.mode === "offline") {
-            speed = 1;
-            fizzyText.play = true;
-            arrayOfPoints = [];
-            while (scene.getObjectByName("point") !== undefined) {
-                var selectedObject = scene.getObjectByName("point");
-                scene.remove(selectedObject);
-            }
-        }
-
-        if (FrameId === data.length - 1) {
-            speed = -1;
-        }
-
-        if (fizzyText.play && FrameId !== 0 && fizzyText.mode === "offline") {
-            FrameId += speed;
-        }
-
-        if (trigger["status"] && data.length - 1 !== FrameId) {
-            if (fizzyText.mode === "offline") {
-                fizzyText.num_particles = data[FrameId]["x"].length;
-                renderPoints(data[FrameId], scene, fizzyText, arrayOfPoints);
-            } else {
+            if (httpGet("/get_status")["status"] && data.length !== 0) {
                 fizzyText.num_particles = data["x"].length;
                 renderPoints(data, scene, fizzyText, arrayOfPoints);
+            }
+
+            if (httpGet("/get_poly_status")['status']) {
+                while (scene.getObjectByName("point") !== undefined) {
+                    var selectedObject = scene.getObjectByName("point");
+                    scene.remove(selectedObject);
+                }
+                scene.remove(scene.getObjectByName("poly"));
+                arrayOfPoints = [];
+
+                addPolyhedron(scene, httpGet("/get_poly"));
+            }
+
+        } else {
+
+            if (Math.round(FrameId) <= 1) {
+                direction = 1;
+                fizzyText.play = true;
+                arrayOfPoints = [];
+                while (scene.getObjectByName("point") !== undefined) {
+                    var selectedObject = scene.getObjectByName("point");
+                    scene.remove(selectedObject);
+                }
+            }
+            if (FrameId >= data.length - 1) {
+                direction = -1;
+            }
+
+            if (fizzyText.play) {
+                FrameId += direction * parseFloat(fizzyText.speedMode);
+                fizzyText.time = (FrameId + 1) / data.length;
+            }
+
+            if (data.length - 1 > Math.round(FrameId) && Math.round(FrameId) >= 1) {
+                fizzyText.num_particles = data[Math.round(FrameId)]["x"].length;
+                renderPoints(data[Math.round(FrameId)], scene, fizzyText, arrayOfPoints);
             }
         }
 
