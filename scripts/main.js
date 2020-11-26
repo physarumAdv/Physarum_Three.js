@@ -19,6 +19,14 @@ function httpGet(Url) {
 }
 
 
+function httpSend(Url, body) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("POST", Url, false); // false for synchronous request
+    xmlHttp.setRequestHeader("Content-Type", "text/json");
+    xmlHttp.send(JSON.stringify(body));
+}
+
+
 function fileGet(file_name) {
     var rawFile = new XMLHttpRequest();
     var allText = "";
@@ -125,14 +133,13 @@ function init() {
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-    var renderer = new THREE.WebGLRenderer({antialias: true});
+    var renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     document.body.appendChild(renderer.domElement);
     var controls = new OrbitControls(camera, renderer.domElement);
     controls.enableKeys = false;
-    // controls.autoRotate = true;
-    // controls.autoRotateSpeed = 3;
+    controls.autoRotateSpeed = 3;
 
     window.addEventListener("resize", function () {
         var width = window.innerWidth;
@@ -190,16 +197,19 @@ window.onload = function() {
         this.num_particles = 0;
         this.color = [255, 255, 0]; // RGB array
         this.pointWidth = 1;
+        this.rotate = false;
 
         this.time = 0.0;
         this.mode = "offline";
         this.speedMode = "1.00";
         this.name = "Pavel Artushkov";
+        this.dorender = false;
 
         this.drawCube = true;
         this.play = true;
         this.turnOn = false;
         this.currentSave = fileGet("/lib/saves/names.json")["default_name"];
+
 
         this.reset_defaults = function () {
             for (var i = 0; i < gui.__controllers.length; i++) {
@@ -241,26 +251,35 @@ window.onload = function() {
 
     gui.add(fizzyText, "num_particles").name("Particles").listen();
     var particles_color = gui.addColor(fizzyText, "color").name("Color");
-    var size = gui.add(fizzyText, "pointWidth", 0.1, 2).name("Point width");
-    var mode_chooser = gui.add(fizzyText, "mode", ["offline", "online"]).name("Mode");
+    var controls_size = gui.add(fizzyText, "pointWidth", 0.1, 2).name("Point width");
+    var controls_mode_chooser = gui.add(fizzyText, "mode", ["offline", "online"]).name("Mode");
     gui.add(fizzyText, "reset_defaults").name("Reset defaults");
 
     var playback = gui.addFolder("Playback");
-    playback.add(fizzyText, "play").name("Play").listen();
+    playback.add(fizzyText, "play").name("Play (Space Bar)").listen();
     playback.add(fizzyText, "restart").name("Restart");
-    var speed = playback.add(fizzyText, "speedMode", ["0.25", "0.5", "0.75", "1.00", "1.25", "1.5", "1.75", "2.00", "5.00", "10.0"]).name("Playback Speed");
-    var timeline = playback.add(fizzyText, "time", 0, 1).step(0.01).name("Timeline").listen();
-    var chooser = playback.add(fizzyText, "currentSave", allSaves).name("Choose save");
+    playback.add(fizzyText, "speedMode", ["0.25", "0.5", "0.75", "1.00", "1.25", "1.5", "1.75", "2.00", "5.00", "10.0"]).name("Playback Speed");
+    var controls_timeline = playback.add(fizzyText, "time", 0, 1).step(0.01).name("Timeline").listen();
+    var controls_chooser = playback.add(fizzyText, "currentSave", allSaves).name("Choose save");
+    playback.open();
+
+    var render_folder = gui.addFolder("Render");
+    var controls_rotate = render_folder.add(fizzyText, "rotate").name("Autorotate");
+    var controls_render = render_folder.add(fizzyText, "dorender").name("Start render");
+    
     var author = gui.add(fizzyText, "name").name("Made by:");
     author.domElement.style.pointerEvents = "none";
 
-    playback.open();
 
-    timeline.onChange(function(value) {
+    controls_rotate.onChange(function(value) {
+        controls.autoRotate = value;
+    });
+
+    controls_timeline.onChange(function(value) {
         FrameId = (data.length) * (value);
     });
 
-    mode_chooser.onChange(function(value) {
+    controls_mode_chooser.onChange(function(value) {
         if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json"); }
         FrameId = 2;
         fizzyText.play = true;
@@ -286,7 +305,7 @@ window.onload = function() {
 
     });
 
-    chooser.onChange(function(value) {
+    controls_chooser.onChange(function(value) {
         if (fizzyText.mode === "online") {
             return 0;
         }
@@ -301,7 +320,7 @@ window.onload = function() {
         data = fileGet("lib/saves/" + fizzyText.currentSave + ".json");
     });
 
-    size.onChange(function(value) {
+    controls_size.onChange(function(value) {
         refreshArrayOfPoints(fizzyText, arrayOfPoints);
     });
 
@@ -326,6 +345,8 @@ window.onload = function() {
             fizzyText.time = (FrameId + 1) / data.length;
         }
     };
+
+    var userId = httpGet("/get_id")["id"];
 
 
     var tmp = init();
@@ -387,7 +408,13 @@ window.onload = function() {
             }
         }
 
-        renderer.render(scene, camera); 
+        renderer.render(scene, camera);
+
+        if (fizzyText.dorender) {
+            var image = renderer.domElement.toDataURL("image/png");
+            httpSend("/add_render", {"img": image, "user": userId});
+        }
+
         stats.end();
     };
     GameLoop(scene);

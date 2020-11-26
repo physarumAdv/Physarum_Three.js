@@ -11,6 +11,7 @@ var scriptsFileServer = new nStatic.Server(path.join(__dirname, "/scripts"));
 
 var Data = [], Poly = [], Movie = [];
 var NewFrame = false, NewPoly = false;
+var RenderInd = 0, FrameIds = [];
 
 function index(req, res) {
     fs.readFile(filePath, {encoding: "utf-8"}, function(err, data) {
@@ -50,6 +51,40 @@ function getFrame(req, res) {
     res.writeHead(200, {"Content-Type": "text/json"});
     res.end(JSON.stringify(Data));
     NewFrame = true;
+}
+
+function getId(req, res) {
+    res.writeHead(200, {"Content-Type": "text/json"});
+    res.end(JSON.stringify({"id": RenderInd, "ok": true}));
+    FrameIds.push(0);
+    RenderInd += 1;
+}
+
+function addRender(req, res) {
+    res.writeHead(200, {"Content-Type": "text/json"});
+
+    var body = "";
+    req.on("data", function (chunk) {
+        body += chunk.toString();
+    });
+
+    req.on("end", function() {
+        var Data = JSON.parse(body);
+        res.end(JSON.stringify({"ok": true}));
+
+        var base64Data = Data["img"].replace(/^data:image\/png;base64,/, "");
+        var num = FrameIds[Data["user"]].toString();
+        while (num.length < 5) num = "0" + num;
+        console.log(FrameIds[Data["user"]]);
+
+
+        fs.writeFile("lib/renders/" + Data["user"] + "_" + num + ".png", base64Data, 'base64', function(err) {
+            if (err) {
+                return console.log(err);
+            }
+        });
+        FrameIds[Data["user"]]++;
+    });
 }
 
 function addPoly(req, res) {
@@ -115,6 +150,12 @@ function main(req, res) {
             break;
         case pathname === "/get_poly_status":
             getPolyStatus(req, res);
+            break;
+        case pathname === "/add_render":
+            addRender(req, res);
+            break;
+        case pathname === "/get_id":
+            getId(req, res);
             break;
         case pathname.startsWith("/lib/"):
             req.url = req.url.replace("/lib", "/");

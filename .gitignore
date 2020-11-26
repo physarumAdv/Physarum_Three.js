@@ -1,4 +1,5 @@
 node_modules/
 lib/saves/
+lib/renders/
 C:UsersUsernodejsnpm-cache/
 package-lock.json
