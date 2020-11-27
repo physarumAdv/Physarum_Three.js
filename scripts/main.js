@@ -236,7 +236,7 @@ window.onload = function() {
         };
     };
 
-    var FrameId = 1, direction = 1, arrayOfPoints = [], data;
+    var FrameId = 1, direction = 1, arrayOfPoints = [], data, userId;
     window.default_size = 0.007;
 
     var allSaves = JSON.parse(fileGet("/lib/saves/names.json"))["names"];
@@ -289,7 +289,9 @@ window.onload = function() {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-        }       
+        } else {
+            userId = httpGet("/get_id")["id"];
+        }
     });
 
     controls_rotate.onChange(function(value) {
@@ -358,17 +360,14 @@ window.onload = function() {
         var keyCode = event.which;
         if (keyCode == 32) { // Space
             fizzyText.play = !fizzyText.play;
-        } else if (keyCode == 39 && FrameId < data.length) { // Left arrow
+        } else if (keyCode == 39 && FrameId < data.length) { // Right arrow
             FrameId += 5;
             fizzyText.time = (FrameId + 1) / data.length;
-        } else if (keyCode == 37 && FrameId > 6) { // Right arrow
-            FrameId -= 5;
+        } else if (keyCode == 37) { // Left arrow
+            FrameId = Math.max(1, FrameId - 5);
             fizzyText.time = (FrameId + 1) / data.length;
         }
     };
-
-    var userId = httpGet("/get_id")["id"];
-
 
     var tmp = init();
     var scene = tmp[0];
@@ -405,7 +404,7 @@ window.onload = function() {
 
         } else {
 
-            if (Math.round(FrameId) <= 1) {
+            if (Math.round(FrameId) < 1) {
                 direction = 1;
                 fizzyText.play = true;
                 arrayOfPoints = [];
@@ -431,7 +430,7 @@ window.onload = function() {
 
         renderer.render(scene, camera);
 
-        if (fizzyText.dorender) {
+        if (fizzyText.dorender && fizzyText.play) {
             var image = renderer.domElement.toDataURL("image/png");
             httpSend("/add_render", {"img": image, "user": userId, "update": false});
         }
