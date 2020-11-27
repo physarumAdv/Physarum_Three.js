@@ -4,6 +4,7 @@ import { OrbitControls } from "../lib/OrbitControls.js";
 import { ConvexGeometry } from '../lib/ConvexGeometry.js';
 import { OBJLoader } from '../lib/OBJLoader.js';
 
+// require("downloadjs")(data, strFileName, strMimeType);
 
 /**
  * Sends a request to the url and returns parsed response
@@ -39,7 +40,7 @@ function fileGet(file_name) {
         }
     };
     rawFile.send(null);
-    return JSON.parse(allText);
+    return allText;
 }
 
 
@@ -208,7 +209,7 @@ window.onload = function() {
         this.drawCube = true;
         this.play = true;
         this.turnOn = false;
-        this.currentSave = fileGet("/lib/saves/names.json")["default_name"];
+        this.currentSave = JSON.parse(fileGet("/lib/saves/names.json"))["default_name"];
 
 
         this.reset_defaults = function () {
@@ -238,7 +239,7 @@ window.onload = function() {
     var FrameId = 1, direction = 1, arrayOfPoints = [], data;
     window.default_size = 0.007;
 
-    var allSaves = fileGet("/lib/saves/names.json")["names"];
+    var allSaves = JSON.parse(fileGet("/lib/saves/names.json"))["names"];
     var stats = initStats(Stats);
 
     // Dat Gui controls setup
@@ -271,6 +272,26 @@ window.onload = function() {
     author.domElement.style.pointerEvents = "none";
 
 
+
+    controls_render.onChange(function(value) {
+        if (value == false) {
+            httpSend("/add_render", {"img": "", "user": userId, "update": true});
+            console.log(httpGet("/get_render_status")["status"][userId]);
+            while (!httpGet("/get_render_status")["status"][userId]) {
+                console.log("bad");
+            }
+            console.log(httpGet("/get_render_status")["status"][userId]);
+
+            var url = "lib/movies/" + userId + ".mp4";
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = url.split('/').pop();
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }       
+    });
+
     controls_rotate.onChange(function(value) {
         controls.autoRotate = value;
     });
@@ -280,7 +301,7 @@ window.onload = function() {
     });
 
     controls_mode_chooser.onChange(function(value) {
-        if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json"); }
+        if (value === "offline") { data = JSON.parse(fileGet("lib/saves/" + fizzyText.currentSave + ".json")); }
         FrameId = 2;
         fizzyText.play = true;
         while (scene.getObjectByName("point") !== undefined) {
@@ -317,7 +338,7 @@ window.onload = function() {
         }
         arrayOfPoints = [];
 
-        data = fileGet("lib/saves/" + fizzyText.currentSave + ".json");
+        data = JSON.parse(fileGet("lib/saves/" + fizzyText.currentSave + ".json"));
     });
 
     controls_size.onChange(function(value) {
@@ -356,7 +377,7 @@ window.onload = function() {
     var controls = tmp[3];
 
     // run game loop (update, render, repeat)
-    data = fileGet("/lib/saves/" + fizzyText.currentSave + ".json");
+    data = JSON.parse(fileGet("/lib/saves/" + fizzyText.currentSave + ".json"));
     var GameLoop = function() {
         requestAnimationFrame(GameLoop);
         stats.begin();
@@ -412,7 +433,7 @@ window.onload = function() {
 
         if (fizzyText.dorender) {
             var image = renderer.domElement.toDataURL("image/png");
-            httpSend("/add_render", {"img": image, "user": userId});
+            httpSend("/add_render", {"img": image, "user": userId, "update": false});
         }
 
         stats.end();
