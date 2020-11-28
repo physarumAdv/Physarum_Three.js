@@ -272,23 +272,40 @@ window.onload = function() {
     author.domElement.style.pointerEvents = "none";
 
 
+    var download = function() {
+        while (!httpGet("/get_render_status")["status"][userId]) {
+            console.log("Working");
+        }
+        console.log("Done!");
+
+        var url = "lib/movies/" + userId + ".mp4";
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = url.split('/').pop();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        var elmnt = document.getElementById("preloader");
+        elmnt.remove();
+    }
+
 
     controls_render.onChange(function(value) {
         if (value == false) {
-            httpSend("/add_render", {"img": "", "user": userId, "update": true});
-            console.log(httpGet("/get_render_status")["status"][userId]);
-            while (!httpGet("/get_render_status")["status"][userId]) {
-                console.log("bad");
-            }
-            console.log(httpGet("/get_render_status")["status"][userId]);
+            var node = document.createElement("div");
+            node.setAttribute("id", "preloader");
+            document.body.appendChild(node);
 
-            var url = "lib/movies/" + userId + ".mp4";
-            let a = document.createElement('a');
-            a.href = url;
-            a.download = url.split('/').pop();
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            var div = document.createElement("div");
+            div.setAttribute("id", "loader");
+
+            var element = document.getElementById("preloader");
+            element.appendChild(div);
+
+            httpSend("/add_render", {"img": "", "user": userId, "update": true});
+
+            setTimeout(download, 100);
         } else {
             userId = httpGet("/get_id")["id"];
         }
@@ -328,7 +345,7 @@ window.onload = function() {
 
     });
 
-    controls_chooser.onChange(function(value) {
+    var loadSave = function() {
         if (fizzyText.mode === "online") {
             return 0;
         }
@@ -341,6 +358,23 @@ window.onload = function() {
         arrayOfPoints = [];
 
         data = JSON.parse(fileGet("lib/saves/" + fizzyText.currentSave + ".json"));
+
+        var elmnt = document.getElementById("preloader");
+        elmnt.remove();
+    }
+
+    controls_chooser.onChange(function(value) {
+        var node = document.createElement("div");
+        node.setAttribute("id", "preloader");
+        document.body.appendChild(node);
+
+        var div = document.createElement("div");
+        div.setAttribute("id", "loader");
+        
+        var element = document.getElementById("preloader");
+        element.appendChild(div);
+
+        setTimeout(loadSave, 100);
     });
 
     controls_size.onChange(function(value) {

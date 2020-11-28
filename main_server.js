@@ -134,7 +134,7 @@ function getPolyStatus(req, res) {
 
 function getRenderStatus(req, res) {
     res.writeHead(200, {"Content-Type": "text/json"});
-    res.end(JSON.stringify({"done": true, "status": Status}));
+    res.end(JSON.stringify({"done": true, "status": Status, "frames": FrameIds}));
 }
 
 function getStatus(req, res) {
