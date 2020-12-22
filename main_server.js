@@ -52,7 +52,7 @@ function addFrame(req, res) {
 function getFrame(req, res) {
     res.writeHead(200, {"Content-Type": "text/json"});
     res.end(JSON.stringify(Data));
-    NewFrame = true;
+    NewFrame = false;
 }
 
 function getId(req, res) { 
@@ -76,7 +76,8 @@ function addRender(req, res) {
         res.end(JSON.stringify({"ok": true}));
 
         if (Data["update"]) {
-            var task = "ffmpeg -framerate 1/0.1 -pattern_type glob -i 'lib/renders/" + Data["user"] + "_*.png' -r 10 lib/movies/" + Data["user"] + ".mp4";
+            var task = "ffmpeg -framerate 1/0.015 -pattern_type glob -i 'lib/renders/" + Data["user"] + "_*.png' -r 30 lib/movies/" + Data["user"] + ".mp4";
+            console.log(task);
             exec(task, (error, stdout, stderr) => {
                 if (error) {
                     console.log(`error: ${error.message}`);

@@ -138,9 +138,9 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     document.body.appendChild(renderer.domElement);
-    var controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableKeys = false;
-    controls.autoRotateSpeed = 3;
+    var orbitControls = new OrbitControls(camera, renderer.domElement);
+    orbitControls.enableKeys = false;
+    orbitControls.autoRotateSpeed = 3;
 
     window.addEventListener("resize", function () {
         var width = window.innerWidth;
@@ -179,7 +179,16 @@ function init() {
     directionalLight.position.set(-6, -8, -8);
     scene.add(directionalLight);
 
-    var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.7);
+    var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.2);
+    directionalLight.position.set(-6, -8, 8);
+    scene.add(directionalLight);
+
+    directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.2);
+    directionalLight.position.set(6, 8, -8);
+    scene.add(directionalLight);
+    
+
+    var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.2);
     scene.add(ambientLight);
 
     camera.position.set(-1.83222123889, 1.83199683912, -2.66435763809);
@@ -187,7 +196,7 @@ function init() {
     camera.rotation.y = 3.14;
     camera.rotation.x = 0.6;
 
-    return [scene, renderer, camera, controls]
+    return [scene, renderer, camera, orbitControls]
 }
 
 
@@ -205,6 +214,7 @@ window.onload = function() {
         this.speedMode = "1.00";
         this.name = "Pavel Artushkov";
         this.dorender = false;
+        this.controls_switch = "OrbitControls"
 
         this.drawCube = true;
         this.play = true;
@@ -236,7 +246,7 @@ window.onload = function() {
         };
     };
 
-    var FrameId = 1, direction = 1, arrayOfPoints = [], data, userId;
+    var FrameId = 1, direction = 1, arrayOfPoints = [], data, userId, newFrame = true;
     window.default_size = 0.007;
 
     var allSaves = JSON.parse(fileGet("/lib/saves/names.json"))["names"];
@@ -267,10 +277,17 @@ window.onload = function() {
     var render_folder = gui.addFolder("Render");
     var controls_rotate = render_folder.add(fizzyText, "rotate").name("Autorotate");
     var controls_render = render_folder.add(fizzyText, "dorender").name("Start render");
+    var 
     
     var author = gui.add(fizzyText, "name").name("Made by:");
     author.domElement.style.pointerEvents = "none";
 
+
+    constrols.onChange(function(value) {
+        if (value == "FlyControls") {
+            orbitControls.dispose()
+        }
+    });
 
     var download = function() {
         while (!httpGet("/get_render_status")["status"][userId]) {
@@ -407,25 +424,28 @@ window.onload = function() {
     var scene = tmp[0];
     var renderer = tmp[1];
     var camera = tmp[2];
-    var controls = tmp[3];
+    var orbitControls = tmp[3];
 
     // run game loop (update, render, repeat)
     data = JSON.parse(fileGet("/lib/saves/" + fizzyText.currentSave + ".json"));
     var GameLoop = function() {
         requestAnimationFrame(GameLoop);
         stats.begin();
-        controls.update();
+        orbitControls.update();
 
 
         if (fizzyText.mode === "online") {
 
+            var status = httpGet("/get_status")["status"];
             data = httpGet("/get_frame");
-            if (httpGet("/get_status")["status"] && data.length !== 0) {
+            if (status && data.length !== 0) {
                 fizzyText.num_particles = data["x"].length;
                 renderPoints(data, scene, fizzyText, arrayOfPoints);
             }
 
-            if (httpGet("/get_poly_status")['status']) {
+            if (status) {
+                console.log("done");
+                // newFrame = true;
                 while (scene.getObjectByName("point") !== undefined) {
                     var selectedObject = scene.getObjectByName("point");
                     scene.remove(selectedObject);
@@ -464,9 +484,10 @@ window.onload = function() {
 
         renderer.render(scene, camera);
 
-        if (fizzyText.dorender && fizzyText.play) {
-            var image = renderer.domElement.toDataURL("image/png");
+        if (fizzyText.dorender && fizzyText.play && newFrame) {
+            var image = renderer.domElement.toDataURL("image/png", 1);
             httpSend("/add_render", {"img": image, "user": userId, "update": false});
+            // newFrame = false;
         }
 
         stats.end();
