@@ -19,7 +19,10 @@ function httpGet(Url) {
 }
 
 
-function fileGet(file_name) {
+function fileGet(file_name, missing_files) {
+    if (missing_files) {
+        return [];
+    }
     var rawFile = new XMLHttpRequest();
     var allText = "";
     rawFile.open("GET", file_name, false);
@@ -199,7 +202,12 @@ window.onload = function() {
         this.drawCube = true;
         this.play = true;
         this.turnOn = false;
-        this.currentSave = fileGet("/lib/saves/names.json")["default_name"];
+
+        if (!FilesMissing) {
+            this.currentSave = fileGet("/lib/saves/names.json", false)["default_name"];
+        } else {
+            this.currentSave = "None";
+        }
 
         this.reset_defaults = function () {
             for (var i = 0; i < gui.__controllers.length; i++) {
@@ -225,10 +233,15 @@ window.onload = function() {
         };
     };
 
-    var FrameId = 1, direction = 1, arrayOfPoints = [], data;
+    var FrameId = 1, direction = 1, arrayOfPoints = [], data, FilesMissing = false;
     window.default_size = 0.007;
 
-    var allSaves = fileGet("/lib/saves/names.json")["names"];
+    try {
+        var allSaves = fileGet("/lib/saves/names.json", false)["names"];
+    } catch (error) {
+        console.log('You have no growth saves in the lib/saves/');
+        FilesMissing = true;
+    }
     var stats = initStats(Stats);
 
     // Dat Gui controls setup
@@ -261,7 +274,7 @@ window.onload = function() {
     });
 
     mode_chooser.onChange(function(value) {
-        if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json"); }
+        if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing); }
         FrameId = 2;
         fizzyText.play = true;
         while (scene.getObjectByName("point") !== undefined) {
@@ -298,7 +311,7 @@ window.onload = function() {
         }
         arrayOfPoints = [];
 
-        data = fileGet("lib/saves/" + fizzyText.currentSave + ".json");
+        data = fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing);
     });
 
     size.onChange(function(value) {
@@ -335,7 +348,7 @@ window.onload = function() {
     var controls = tmp[3];
 
     // run game loop (update, render, repeat)
-    data = fileGet("/lib/saves/" + fizzyText.currentSave + ".json");
+    data = fileGet("/lib/saves/" + fizzyText.currentSave + ".json", FilesMissing);
     var GameLoop = function() {
         requestAnimationFrame(GameLoop);
         stats.begin();
