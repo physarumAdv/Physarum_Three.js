@@ -248,7 +248,7 @@ window.onload = function() {
     var playback = gui.addFolder("Playback");
     playback.add(fizzyText, "play").name("Play").listen();
     playback.add(fizzyText, "restart").name("Restart");
-    var speed = playback.add(fizzyText, "speedMode", ["0.25", "0.5", "0.75", "1.00", "1.25", "1.5", "1.75", "2.00", "5.00", "10.0"]).name("Playback Speed");
+    playback.add(fizzyText, "speedMode", ["0.25", "0.5", "0.75", "1.00", "1.25", "1.5", "1.75", "2.00", "5.00", "10.0"]).name("Playback Speed");
     var timeline = playback.add(fizzyText, "time", 0, 1).step(0.01).name("Timeline").listen();
     var chooser = playback.add(fizzyText, "currentSave", allSaves).name("Choose save");
     var author = gui.add(fizzyText, "name").name("Made by:");
