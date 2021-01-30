@@ -277,17 +277,9 @@ window.onload = function() {
     var render_folder = gui.addFolder("Render");
     var controls_rotate = render_folder.add(fizzyText, "rotate").name("Autorotate");
     var controls_render = render_folder.add(fizzyText, "dorender").name("Start render");
-    var 
     
     var author = gui.add(fizzyText, "name").name("Made by:");
     author.domElement.style.pointerEvents = "none";
-
-
-    constrols.onChange(function(value) {
-        if (value == "FlyControls") {
-            orbitControls.dispose()
-        }
-    });
 
     var download = function() {
         while (!httpGet("/get_render_status")["status"][userId]) {
