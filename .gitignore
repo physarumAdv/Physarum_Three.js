@@ -3,4 +3,4 @@ lib/saves/
 lib/renders/
 lib/movies/
 C:UsersUsernodejsnpm-cache/
-package-lock.json
+.idea/

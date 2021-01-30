@@ -28,7 +28,10 @@ function httpSend(Url, body) {
 }
 
 
-function fileGet(file_name) {
+function fileGet(file_name, missing_files) {
+    if (missing_files) {
+        return [];
+    }
     var rawFile = new XMLHttpRequest();
     var allText = "";
     rawFile.open("GET", file_name, false);
@@ -78,9 +81,9 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
 
     for (var i = 0; i < frame["x"].length; ++i) {
         if (i < arrayOfPoints.length) {
-            arrayOfPoints[i].position.x = frame["x"][i] * 2;
-            arrayOfPoints[i].position.y = frame["y"][i] * 2;
-            arrayOfPoints[i].position.z = frame["z"][i] * 2;
+            arrayOfPoints[i].position.x = frame["x"][i];
+            arrayOfPoints[i].position.y = frame["y"][i];
+            arrayOfPoints[i].position.z = frame["z"][i];
         } else {
             var point = new THREE.Mesh(geometry, material);
             point.scale.set(fizzyText.pointWidth, fizzyText.pointWidth, fizzyText.pointWidth);
@@ -89,9 +92,9 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
             scene.add(point);
             arrayOfPoints.push(point);
             
-            arrayOfPoints[i].position.x = frame["x"][i] * 2;
-            arrayOfPoints[i].position.y = frame["y"][i] * 2;
-            arrayOfPoints[i].position.z = frame["z"][i] * 2;
+            arrayOfPoints[i].position.x = frame["x"][i];
+            arrayOfPoints[i].position.y = frame["y"][i];
+            arrayOfPoints[i].position.z = frame["z"][i];
         }
     }
     for (var j = frame["x"].length; j < arrayOfPoints.length; ++j) {
@@ -219,8 +222,12 @@ window.onload = function() {
         this.drawCube = true;
         this.play = true;
         this.turnOn = false;
-        this.currentSave = JSON.parse(fileGet("/lib/saves/names.json"))["default_name"];
 
+        if (!FilesMissing) {
+            this.currentSave = fileGet("/lib/saves/names.json", false)["default_name"];
+        } else {
+            this.currentSave = "None";
+        }
 
         this.reset_defaults = function () {
             for (var i = 0; i < gui.__controllers.length; i++) {
@@ -246,10 +253,16 @@ window.onload = function() {
         };
     };
 
-    var FrameId = 1, direction = 1, arrayOfPoints = [], data, userId, newFrame = true;
+    var FrameId = 1, direction = 1, arrayOfPoints = [], data, FilesMissing = false, userId, newFrame = true;
     window.default_size = 0.007;
 
-    var allSaves = JSON.parse(fileGet("/lib/saves/names.json"))["names"];
+    try {
+        var allSaves = fileGet("/lib/saves/names.json", false)["names"];
+    } catch (error) {
+        console.log('You have no growth saves in the lib/saves/');
+        FilesMissing = true;
+    }
+
     var stats = initStats(Stats);
 
     // Dat Gui controls setup
@@ -270,6 +283,7 @@ window.onload = function() {
     playback.add(fizzyText, "play").name("Play (Space Bar)").listen();
     playback.add(fizzyText, "restart").name("Restart");
     playback.add(fizzyText, "speedMode", ["0.25", "0.5", "0.75", "1.00", "1.25", "1.5", "1.75", "2.00", "5.00", "10.0"]).name("Playback Speed");
+  
     var controls_timeline = playback.add(fizzyText, "time", 0, 1).step(0.01).name("Timeline").listen();
     var controls_chooser = playback.add(fizzyText, "currentSave", allSaves).name("Choose save");
     playback.open();
@@ -328,8 +342,8 @@ window.onload = function() {
         FrameId = (data.length) * (value);
     });
 
-    controls_mode_chooser.onChange(function(value) {
-        if (value === "offline") { data = JSON.parse(fileGet("lib/saves/" + fizzyText.currentSave + ".json")); }
+    mode_chooser.onChange(function(value) {
+        if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing); }
         FrameId = 2;
         fizzyText.play = true;
         while (scene.getObjectByName("point") !== undefined) {
@@ -366,7 +380,7 @@ window.onload = function() {
         }
         arrayOfPoints = [];
 
-        data = JSON.parse(fileGet("lib/saves/" + fizzyText.currentSave + ".json"));
+        data = JSON.parse(fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing));
 
         var elmnt = document.getElementById("preloader");
         elmnt.remove();
@@ -419,7 +433,9 @@ window.onload = function() {
     var orbitControls = tmp[3];
 
     // run game loop (update, render, repeat)
-    data = JSON.parse(fileGet("/lib/saves/" + fizzyText.currentSave + ".json"));
+
+    data = fileGet("/lib/saves/" + fizzyText.currentSave + ".json", FilesMissing);
+
     var GameLoop = function() {
         requestAnimationFrame(GameLoop);
         stats.begin();
