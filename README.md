@@ -1,4 +1,4 @@
-# Physarum\_webGL
+# Physarum\_Three.js
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7243b915eb214102be03f7c7b4dd2681)](https://app.codacy.com/gh/physarumAdv/Physarum_webGL?utm_source=github.com&utm_medium=referral&utm_content=physarumAdv/Physarum_webGL&utm_campaign=Badge_Grade_Settings)
 
