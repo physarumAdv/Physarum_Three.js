@@ -72,9 +72,9 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
 
     for (var i = 0; i < frame["x"].length; ++i) {
         if (i < arrayOfPoints.length) {
-            arrayOfPoints[i].position.x = frame["x"][i];
-            arrayOfPoints[i].position.y = frame["y"][i];
-            arrayOfPoints[i].position.z = frame["z"][i];
+            arrayOfPoints[i].position.x = frame["x"][i] * 2;
+            arrayOfPoints[i].position.y = frame["y"][i] * 2;
+            arrayOfPoints[i].position.z = frame["z"][i] * 2;
         } else {
             var point = new THREE.Mesh(geometry, material);
             point.scale.set(fizzyText.pointWidth, fizzyText.pointWidth, fizzyText.pointWidth);
@@ -83,9 +83,9 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
             scene.add(point);
             arrayOfPoints.push(point);
             
-            arrayOfPoints[i].position.x = frame["x"][i];
-            arrayOfPoints[i].position.y = frame["y"][i];
-            arrayOfPoints[i].position.z = frame["z"][i];
+            arrayOfPoints[i].position.x = frame["x"][i] * 2;
+            arrayOfPoints[i].position.y = frame["y"][i] * 2;
+            arrayOfPoints[i].position.z = frame["z"][i] * 2;
         }
     }
     for (var j = frame["x"].length; j < arrayOfPoints.length; ++j) {
