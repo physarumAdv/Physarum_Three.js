@@ -11,6 +11,7 @@ var scriptsFileServer = new nStatic.Server(path.join(__dirname, "/scripts"));
 
 var Data = [], Poly = [], Movie = [];
 var NewFrame = false, NewPoly = false;
+var NumberUsers = 0;
 
 function index(req, res) {
     fs.readFile(filePath, {encoding: "utf-8"}, function(err, data) {
@@ -41,7 +42,7 @@ function addFrame(req, res) {
         if (err) {
             return console.log(err);
         }
-    }); 
+    });
 
     NewFrame = true;
 }
