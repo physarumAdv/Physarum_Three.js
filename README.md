@@ -4,7 +4,7 @@
 
 This is a visualizer for Physarum Polycephalum's growth written in JavaScript using THREE.js and Node.js libraries.
 The visualizer is developed for [this](https://github.com/physarumAdv/minds_crawl) simulator. <br/>
-You can also visit this project on a website: [pavTiger.silaeder.ru](http://pavtiger.silaeder.ru)
+You can also visit this project on a website: [pavTiger.silaeder.ru](http://physarum.silaeder.ru)
 
 ## Visualizer
 There are two visualization modes:
