@@ -1,10 +1,10 @@
-# Physarum\_webGL
+# Physarum\_Three.js
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7243b915eb214102be03f7c7b4dd2681)](https://app.codacy.com/gh/physarumAdv/Physarum_webGL?utm_source=github.com&utm_medium=referral&utm_content=physarumAdv/Physarum_webGL&utm_campaign=Badge_Grade_Settings)
 
 This is a visualizer for Physarum Polycephalum's growth written in JavaScript using THREE.js and Node.js libraries.
 The visualizer is developed for [this](https://github.com/physarumAdv/minds_crawl) simulator. <br/>
-You can also visit this project on a website: [pavTiger.silaeder.ru](http://pavtiger.silaeder.ru)
+You can also visit this project on a website: [pavTiger.silaeder.ru](http://physarum.silaeder.ru)
 
 ## Visualizer
 There are two visualization modes:
@@ -39,7 +39,7 @@ This way all renderings are saved on the server and browser doesn't have to merg
 ## Installing
 This will install all required libraries
 ```bash
-npm install
+npm install node-static
 ```
 
 ## Executing

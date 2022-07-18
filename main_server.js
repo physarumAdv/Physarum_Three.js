@@ -44,7 +44,7 @@ function addFrame(req, res) {
         if (err) {
             return console.log(err);
         }
-    }); 
+    });
 
     NewFrame = true;
 }

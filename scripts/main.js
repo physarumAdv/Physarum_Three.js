@@ -3,12 +3,12 @@ import * as THREE from "../lib/three.module.js";
 import { OrbitControls } from "../lib/OrbitControls.js";
 import { ConvexGeometry } from '../lib/ConvexGeometry.js';
 import { OBJLoader } from '../lib/OBJLoader.js';
+import { FlyControls } from '../lib/FlyControls.js';
 
-// require("downloadjs")(data, strFileName, strMimeType);
 
 /**
  * Sends a request to the url and returns parsed response
- * 
+ *
  * @param The url of a server for request
  * @returns Server response as parsed json object
  */
@@ -43,7 +43,7 @@ function fileGet(file_name, missing_files) {
         }
     };
     rawFile.send(null);
-    return allText;
+    return JSON.parse(allText);
 }
 
 
@@ -81,9 +81,9 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
 
     for (var i = 0; i < frame["x"].length; ++i) {
         if (i < arrayOfPoints.length) {
-            arrayOfPoints[i].position.x = frame["x"][i];
-            arrayOfPoints[i].position.y = frame["y"][i];
-            arrayOfPoints[i].position.z = frame["z"][i];
+            arrayOfPoints[i].position.x = frame["x"][i] * 2;
+            arrayOfPoints[i].position.y = frame["y"][i] * 2;
+            arrayOfPoints[i].position.z = frame["z"][i] * 2;
         } else {
             var point = new THREE.Mesh(geometry, material);
             point.scale.set(fizzyText.pointWidth, fizzyText.pointWidth, fizzyText.pointWidth);
@@ -91,10 +91,10 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
             point.name = "point";
             scene.add(point);
             arrayOfPoints.push(point);
-            
-            arrayOfPoints[i].position.x = frame["x"][i];
-            arrayOfPoints[i].position.y = frame["y"][i];
-            arrayOfPoints[i].position.z = frame["z"][i];
+
+            arrayOfPoints[i].position.x = frame["x"][i] * 2;
+            arrayOfPoints[i].position.y = frame["y"][i] * 2;
+            arrayOfPoints[i].position.z = frame["z"][i] * 2;
         }
     }
     for (var j = frame["x"].length; j < arrayOfPoints.length; ++j) {
@@ -215,7 +215,8 @@ window.onload = function() {
         this.time = 0.0;
         this.mode = "offline";
         this.speedMode = "1.00";
-        this.name = "Pavel Artushkov";
+        this.name = "Paul Artushkov";
+
         this.dorender = false;
         this.controls_switch = "OrbitControls"
 
@@ -224,7 +225,8 @@ window.onload = function() {
         this.turnOn = false;
 
         if (!FilesMissing) {
-            this.currentSave = fileGet("/lib/saves/names.json", false)["default_name"];
+            let json_dictionary = fileGet("/lib/saves/names.json", false);
+            this.currentSave = json_dictionary["default_name"];
         } else {
             this.currentSave = "None";
         }
@@ -295,6 +297,7 @@ window.onload = function() {
     var author = gui.add(fizzyText, "name").name("Made by:");
     author.domElement.style.pointerEvents = "none";
 
+
     var download = function() {
         while (!httpGet("/get_render_status")["status"][userId]) {
             console.log("Working");
@@ -335,14 +338,14 @@ window.onload = function() {
     });
 
     controls_rotate.onChange(function(value) {
-        controls.autoRotate = value;
+        orbitControls.autoRotate = value;
     });
 
     controls_timeline.onChange(function(value) {
         FrameId = (data.length) * (value);
     });
 
-    mode_chooser.onChange(function(value) {
+    controls_mode_chooser.onChange(function(value) {
         if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing); }
         FrameId = 2;
         fizzyText.play = true;
@@ -380,7 +383,7 @@ window.onload = function() {
         }
         arrayOfPoints = [];
 
-        data = JSON.parse(fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing));
+        data = fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing);
 
         var elmnt = document.getElementById("preloader");
         elmnt.remove();
@@ -393,7 +396,7 @@ window.onload = function() {
 
         var div = document.createElement("div");
         div.setAttribute("id", "loader");
-        
+
         var element = document.getElementById("preloader");
         element.appendChild(div);
 
@@ -423,8 +426,9 @@ window.onload = function() {
         } else if (keyCode == 37) { // Left arrow
             FrameId = Math.max(1, FrameId - 5);
             fizzyText.time = (FrameId + 1) / data.length;
+            return false;
         }
-    };
+    }
 
     var tmp = init();
     var scene = tmp[0];
@@ -441,12 +445,12 @@ window.onload = function() {
         stats.begin();
         orbitControls.update();
 
-
         if (fizzyText.mode === "online") {
 
             var status = httpGet("/get_status")["status"];
             data = httpGet("/get_frame");
             if (status && data.length !== 0) {
+                // New frame received from simulator
                 fizzyText.num_particles = data["x"].length;
                 renderPoints(data, scene, fizzyText, arrayOfPoints);
             }
