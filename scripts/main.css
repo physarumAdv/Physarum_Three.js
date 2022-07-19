@@ -26,7 +26,7 @@ body {
     animation: spin 2s linear infinite;
 }
 
-#loader:before {
+#loader::before {
     content: "";
     position: absolute;
     top: 5px;
@@ -40,7 +40,7 @@ body {
     animation: spin 3s linear infinite;
 }
 
-#loader:after {
+#loader::after {
     content: "";
     position: absolute;
     top: 15px;
@@ -49,17 +49,18 @@ body {
     bottom: 15px;
     border-radius: 50%;
     border: 3px solid transparent;
-    border-top-color: #ff00ff;
+    border-top-color: #f0f;
     -webkit-animation: spin 1.5s linear infinite;
     animation: spin 1.5s linear infinite;
 }
 
 @-webkit-keyframes spin {
-    0%   {
+    0% {
         -webkit-transform: rotate(0deg);
         -ms-transform: rotate(0deg);
         transform: rotate(0deg);
     }
+
     100% {
         -webkit-transform: rotate(360deg);
         -ms-transform: rotate(360deg);

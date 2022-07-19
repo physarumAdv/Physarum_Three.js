@@ -3,7 +3,7 @@ const urlapi = require("url");
 const fs = require("fs");
 const path = require("path");
 const { exec } = require("child_process");
-const fsExtra = require('fs-extra');
+const fsExtra = require("fs-extra");
 
 const nStatic = require("node-static");
 
@@ -11,17 +11,15 @@ const filePath = path.join(__dirname, "physarum.html");
 let libsFileServer = new nStatic.Server(path.join(__dirname, "/lib"));
 let scriptsFileServer = new nStatic.Server(path.join(__dirname, "/scripts"));
 
-let movies = 'lib/movies';
-if (!fs.existsSync(movies)){
-    fs.mkdirSync(movies);
+if (!fs.existsSync("lib/movies")){
+    fs.mkdirSync("lib/movies");
 }
-fsExtra.emptyDirSync(movies);
+fsExtra.emptyDirSync("lib/movies");
 
-let renders = 'lib/renders';
-if (!fs.existsSync(renders)){
-    fs.mkdirSync(renders);
+if (!fs.existsSync("lib/renders")){
+    fs.mkdirSync("lib/renders");
 }
-fsExtra.emptyDirSync(renders);
+fsExtra.emptyDirSync("lib/renders");
 
 
 let Data = [], Poly = [], Movie = [];

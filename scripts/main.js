@@ -1,9 +1,9 @@
 import * as THREE from "../lib/three.module.js";
 
 import { OrbitControls } from "../lib/OrbitControls.js";
-import { ConvexGeometry } from '../lib/ConvexGeometry.js';
-import { OBJLoader } from '../lib/OBJLoader.js';
-import { FlyControls } from '../lib/FlyControls.js';
+import { ConvexGeometry } from "../lib/ConvexGeometry.js";
+import { OBJLoader } from "../lib/OBJLoader.js";
+import { FlyControls } from "../lib/FlyControls.js";
 
 
 /**
@@ -158,18 +158,18 @@ function init() {
     // const loader = new OBJLoader();
     // loader.load(
     //     // resource URL
-    //     'lib/models/sphere.obj',
+    //     "lib/models/sphere.obj",
     //     // called when resource is loaded
     //     function ( object ) {
     //         scene.add( object );
     //     },
     //     // called when loading is in progresses
     //     function ( xhr ) {
-    //         console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+    //         console.log( ( xhr.loaded / xhr.total * 100 ) + "% loaded" );
     //     },
     //     // called when loading has errors
     //     function ( error ) {
-    //         console.log( 'An error happened' );
+    //         console.log( "An error happened" );
     //     }
     // );
 
@@ -199,7 +199,7 @@ function init() {
     camera.rotation.y = 3.14;
     camera.rotation.x = 0.6;
 
-    return [scene, renderer, camera, orbitControls]
+    return [scene, renderer, camera, orbitControls];
 }
 
 
@@ -207,7 +207,7 @@ function init() {
 
 window.onload = function() {
     const FizzyText = function () {
-        this.num_particles = 0;
+        this.numParticles = 0;
         this.color = [255, 255, 0]; // RGB array
         this.pointWidth = 1;
         this.rotate = false;
@@ -218,15 +218,15 @@ window.onload = function() {
         this.name = "Paul Artushkov";
 
         this.dorender = false;
-        this.controls_switch = "OrbitControls"
+        this.controlsSwitch = "OrbitControls";
 
         this.drawCube = true;
         this.play = true;
         this.turnOn = false;
 
         if (!FilesMissing) {
-            let json_dictionary = fileGet("/lib/saves/names.json", false);
-            this.currentSave = json_dictionary["default_name"];
+            let jsonDictionary = fileGet("/lib/saves/names.json", false);
+            this.currentSave = jsonDictionary["default_name"];
         } else {
             this.currentSave = "None";
         }
@@ -261,7 +261,7 @@ window.onload = function() {
     try {
         var allSaves = fileGet("/lib/saves/names.json", false)["names"];
     } catch (error) {
-        console.log('You have no growth saves in the lib/saves/');
+        console.log("You have no growth saves in the lib/saves/");
         FilesMissing = true;
     }
 
@@ -275,10 +275,10 @@ window.onload = function() {
         width: 300
     });
 
-    gui.add(fizzyText, "num_particles").name("Particles").listen();
-    let particles_color = gui.addColor(fizzyText, "color").name("Color");
-    let controls_size = gui.add(fizzyText, "pointWidth", 0.1, 2).name("Point width");
-    let controls_mode_chooser = gui.add(fizzyText, "mode", ["offline", "online"]).name("Mode");
+    gui.add(fizzyText, "numParticles").name("Particles").listen();
+    let particlesColor = gui.addColor(fizzyText, "color").name("Color");
+    let controlsSize = gui.add(fizzyText, "pointWidth", 0.1, 2).name("Point width");
+    let controlsModeChooser = gui.add(fizzyText, "mode", ["offline", "online"]).name("Mode");
     gui.add(fizzyText, "reset_defaults").name("Reset defaults");
 
     let playback = gui.addFolder("Playback");
@@ -286,8 +286,8 @@ window.onload = function() {
     playback.add(fizzyText, "restart").name("Restart");
     playback.add(fizzyText, "speedMode", ["0.25", "0.5", "0.75", "1.00", "1.25", "1.5", "1.75", "2.00", "5.00", "10.0"]).name("Playback Speed");
   
-    let controls_timeline = playback.add(fizzyText, "time", 0, 1).step(0.01).name("Timeline").listen();
-    let controls_chooser = playback.add(fizzyText, "currentSave", allSaves).name("Choose save");
+    let controlsTimeline = playback.add(fizzyText, "time", 0, 1).step(0.01).name("Timeline").listen();
+    let controlsChooser = playback.add(fizzyText, "currentSave", allSaves).name("Choose save");
     playback.open();
 
     let render_folder = gui.addFolder("Render");
@@ -305,16 +305,16 @@ window.onload = function() {
         console.log("Done!");
 
         let url = "lib/movies/" + userId + ".mp4";
-        let a = document.createElement('a');
+        let a = document.createElement("a");
         a.href = url;
-        a.download = url.split('/').pop();
+        a.download = url.split("/").pop();
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
 
         let elmnt = document.getElementById("preloader");
         elmnt.remove();
-    }
+    };
 
 
     controls_render.onChange(function(value) {
@@ -341,11 +341,11 @@ window.onload = function() {
         orbitControls.autoRotate = value;
     });
 
-    controls_timeline.onChange(function(value) {
+    controlsTimeline.onChange(function(value) {
         FrameId = (data.length) * (value);
     });
 
-    controls_mode_chooser.onChange(function(value) {
+    controlsModeChooser.onChange(function(value) {
         if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing); }
         FrameId = 2;
         fizzyText.play = true;
@@ -358,7 +358,7 @@ window.onload = function() {
 	    playback.close();
             let obj = httpGet("/get_poly");
             if (obj.length === 0) {
-                console.log('No Polyhedron data. Run simulator process or contact admins.');
+                console.log("No Polyhedron data. Run simulator process or contact admins.");
             } else {
                 addPolyhedron(scene, httpGet("/get_poly"));
             }
@@ -389,7 +389,7 @@ window.onload = function() {
         elmnt.remove();
     }
 
-    controls_chooser.onChange(function(value) {
+    controlsChooser.onChange(function(value) {
         let node = document.createElement("div");
         node.setAttribute("id", "preloader");
         document.body.appendChild(node);
@@ -403,11 +403,11 @@ window.onload = function() {
         setTimeout(loadSave, 100);
     });
 
-    controls_size.onChange(function(value) {
+    controlsSize.onChange(function(value) {
         refreshArrayOfPoints(fizzyText, arrayOfPoints);
     });
 
-    particles_color.onChange(function(value) {
+    particlesColor.onChange(function(value) {
         fizzyText.color[0] = value[0];
         fizzyText.color[1] = value[1];
         fizzyText.color[2] = value[2];
@@ -451,7 +451,7 @@ window.onload = function() {
             data = httpGet("/get_frame");
             if (status && data.length !== 0) {
                 // New frame received from simulator
-                fizzyText.num_particles = data["x"].length;
+                fizzyText.numParticles = data["x"].length;
                 renderPoints(data, scene, fizzyText, arrayOfPoints);
             }
 
@@ -489,7 +489,7 @@ window.onload = function() {
             }
 
             if (data.length - 1 > Math.round(FrameId) && Math.round(FrameId) >= 1) {
-                fizzyText.num_particles = data[Math.round(FrameId)]["x"].length;
+                fizzyText.numParticles = data[Math.round(FrameId)]["x"].length;
                 renderPoints(data[Math.round(FrameId)], scene, fizzyText, arrayOfPoints);
             }
         }
