@@ -27,6 +27,7 @@
   "homepage": "https://github.com/physarumAdv/Physarum_webGL#readme",
   "dependencies": {
     "downloadjs": "^1.4.7",
+    "fs-extra": "^10.1.0",
     "node-static": "^0.7.11"
   }
 }

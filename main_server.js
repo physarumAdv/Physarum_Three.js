@@ -3,17 +3,30 @@ const urlapi = require("url");
 const fs = require("fs");
 const path = require("path");
 const { exec } = require("child_process");
+const fsExtra = require('fs-extra');
 
 const nStatic = require("node-static");
 
 const filePath = path.join(__dirname, "physarum.html");
-var libsFileServer = new nStatic.Server(path.join(__dirname, "/lib"));
-var scriptsFileServer = new nStatic.Server(path.join(__dirname, "/scripts"));
+let libsFileServer = new nStatic.Server(path.join(__dirname, "/lib"));
+let scriptsFileServer = new nStatic.Server(path.join(__dirname, "/scripts"));
+
+let movies = 'lib/movies';
+if (!fs.existsSync(movies)){
+    fs.mkdirSync(movies);
+}
+fsExtra.emptyDirSync(movies);
+
+let renders = 'lib/renders';
+if (!fs.existsSync(renders)){
+    fs.mkdirSync(renders);
+}
+fsExtra.emptyDirSync(renders);
 
 
-var Data = [], Poly = [], Movie = [];
-var NewFrame = false, NewPoly = false;
-var RenderInd = 0, FrameIds = [], Status = [];
+let Data = [], Poly = [], Movie = [];
+let NewFrame = false, NewPoly = false;
+let RenderInd = 0, FrameIds = [], Status = [];
 
 function index(req, res) {
     fs.readFile(filePath, {encoding: "utf-8"}, function(err, data) {
@@ -29,7 +42,7 @@ function index(req, res) {
 function addFrame(req, res) {
     res.writeHead(200, {"Content-Type": "text/json"});
 
-    var body = "";
+    let body = "";
     req.on("data", function (chunk) {
         body += chunk.toString();
     });
@@ -66,17 +79,17 @@ function getId(req, res) {
 function addRender(req, res) {
     res.writeHead(200, {"Content-Type": "text/json"});
 
-    var body = "";
+    let body = "";
     req.on("data", function (chunk) {
         body += chunk.toString();
     });
 
     req.on("end", function() {
-        var Data = JSON.parse(body);
+        let Data = JSON.parse(body);
         res.end(JSON.stringify({"ok": true}));
 
         if (Data["update"]) {
-            var task = "ffmpeg -framerate 1/0.015 -pattern_type glob -i 'lib/renders/" + Data["user"] + "_*.png' -r 30 lib/movies/" + Data["user"] + ".mp4";
+            let task = "ffmpeg -framerate 1/0.015 -pattern_type glob -i 'lib/renders/" + Data["user"] + "_*.png' -r 30 lib/movies/" + Data["user"] + ".mp4";
             console.log(task);
             exec(task, (error, stdout, stderr) => {
                 if (error) {
@@ -91,12 +104,14 @@ function addRender(req, res) {
                 console.log(`stdout: ${stdout}`);
             });
         } else {
-            var base64Data = Data["img"].replace(/^data:image\/png;base64,/, "");
-            var num = FrameIds[Data["user"]].toString();
-            while (num.length < 5) num = "0" + num;
+            let base64Data = Data["img"].replace(/^data:image\/png;base64,/, "");
+            let num = FrameIds[Data["user"]].toString();
+            while (num.length < 5) {
+                num = "0" + num;
+            }
 
 
-            fs.writeFile("lib/renders/" + Data["user"] + "_" + num + ".png", base64Data, 'base64', function(err) {
+            fs.writeFile("lib/renders/" + Data["user"] + "_" + num + ".png", base64Data, "base64", function(err) {
                 if (err) {
                     return console.log(err);
                 }
@@ -109,7 +124,7 @@ function addRender(req, res) {
 function addPoly(req, res) {
     res.writeHead(200, {"Content-Type": "text/json"});
 
-    var body = "";
+    let body = "";
     req.on("data", function (chunk) {
         body += chunk.toString();
     });
@@ -149,9 +164,9 @@ function error404(req, res) {
 }
 
 function main(req, res) {
-    var url = urlapi.parse(req.url);
+    let url = urlapi.parse(req.url);
 
-    var pathname = url.pathname;
+    let pathname = url.pathname;
 
     switch(true) {
         case pathname === "/":
@@ -198,6 +213,6 @@ function main(req, res) {
     }
 }
 
-var app = http.createServer(main);
+let app = http.createServer(main);
 app.listen(8080);
 console.log("Listening on 8080");

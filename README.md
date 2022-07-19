@@ -39,7 +39,7 @@ This way all renderings are saved on the server and browser doesn't have to merg
 ## Installing
 This will install all required libraries
 ```bash
-npm install node-static
+npm install node-static fs-extra
 ```
 
 ## Executing
