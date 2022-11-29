@@ -108,8 +108,8 @@ function addRender(req, res) {
                 num = "0" + num;
             }
 
-
-            fs.writeFile("lib/renders/" + Data["user"] + "_" + num + ".png", base64Data, "base64", function(err) {
+            let output_filename = "lib/renders/" + Data["user"] + "_" + num + ".png"
+            fs.writeFile(output_filename, base64Data, "base64", function(err) {
                 if (err) {
                     return console.log(err);
                 }
@@ -211,7 +211,7 @@ function main(req, res) {
     }
 }
 
-let config = JSON.parse(fs.readFileSync('config.json'));
+let config = JSON.parse(fs.readFileSync("config.json"));
 let app = http.createServer(main);
 app.listen(config["port"]);
 console.log("Listening on " + config["port"]);
