@@ -6,6 +6,8 @@ import { OBJLoader } from "../lib/OBJLoader.js";
 import { FlyControls } from "../lib/FlyControls.js";
 
 
+let scene, orbitControls, camera, renderer, gui;
+
 /**
  * Sends a request to the url and returns parsed response
  *
@@ -77,7 +79,7 @@ function refreshArrayOfPoints(fizzyText, arrayOfPoints) {
 function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
     let color = new THREE.Color("rgb(" + Math.round(fizzyText.color[0]) + "," + Math.round(fizzyText.color[1]) + "," + Math.round(fizzyText.color[2]) + ")");
     let geometry = new THREE.SphereGeometry(window.default_size, 10, 10);
-    let material = new THREE.MeshBasicMaterial({color: color, wireframe: false});
+    let material = new THREE.MeshBasicMaterial({color, wireframe: false});
 
     for (let i = 0; i < frame["x"].length; ++i) {
         if (i < arrayOfPoints.length) {
@@ -133,15 +135,22 @@ function addPolyhedron(scene, data) {
 }
 
 
-function init() {
-    let scene = new THREE.Scene();
-    let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+function remove_points_from_scene() {
+    while (scene.getObjectByName("point") !== undefined) {
+        scene.remove(scene.getObjectByName("point"));
+    }
+}
 
-    let renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
+
+function init() {
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     document.body.appendChild(renderer.domElement);
-    let orbitControls = new OrbitControls(camera, renderer.domElement);
+    orbitControls = new OrbitControls(camera, renderer.domElement);
     orbitControls.enableKeys = false;
     orbitControls.autoRotateSpeed = 3;
 
@@ -198,8 +207,6 @@ function init() {
 
     camera.rotation.y = 3.14;
     camera.rotation.x = 0.6;
-
-    return [scene, renderer, camera, orbitControls];
 }
 
 
@@ -248,10 +255,7 @@ window.onload = function() {
             arrayOfPoints = [];
 
             // clear scene from points
-            while (scene.getObjectByName("point") !== undefined) {
-                let selectedObject = scene.getObjectByName("point");
-                scene.remove(selectedObject);
-            }
+            remove_points_from_scene()
         };
     };
 
@@ -269,13 +273,15 @@ window.onload = function() {
 
     // Dat Gui controls setup
     let fizzyText = new FizzyText();
-    let gui = new dat.GUI({
+    gui = new dat.GUI({
         load: JSON,
         preset: "Flow",
         width: 300
     });
 
-    gui.add(fizzyText, "numParticles").name("Particles").listen();
+    let particleNumber = gui.add(fizzyText, "numParticles").name("Particles").listen();
+    particleNumber.domElement.style.pointerEvents = "none";
+
     let particlesColor = gui.addColor(fizzyText, "color").name("Color");
     let controlsSize = gui.add(fizzyText, "pointWidth", 0.1, 2).name("Point width");
     let controlsModeChooser = gui.add(fizzyText, "mode", ["offline", "online"]).name("Mode");
@@ -290,16 +296,16 @@ window.onload = function() {
     let controlsChooser = playback.add(fizzyText, "currentSave", allSaves).name("Choose save");
     playback.open();
 
-    let render_folder = gui.addFolder("Render");
-    let controls_rotate = render_folder.add(fizzyText, "rotate").name("Autorotate");
-    let controls_render = render_folder.add(fizzyText, "dorender").name("Start render");
+    let renderFolder = gui.addFolder("Render");
+    let controlsRotate = renderFolder.add(fizzyText, "rotate").name("Autorotate");
+    let controlsRender = renderFolder.add(fizzyText, "dorender").name("Start render");
     
     // let author = gui.add(fizzyText, "name").name("Made by:");
     // author.domElement.style.pointerEvents = "none";
 
 
     let download = function() {
-        while (!httpGet("/get_render_status")["status"][userId]) {
+        while (!httpGet("/get_render_status")["status"][parseInt(userId)]) {
             console.log("Working");
         }
         console.log("Done!");
@@ -317,7 +323,7 @@ window.onload = function() {
     };
 
 
-    controls_render.onChange(function(value) {
+    controlsRender.onChange(function(value) {
         if (value === false) {
             let node = document.createElement("div");
             node.setAttribute("id", "preloader");
@@ -337,7 +343,7 @@ window.onload = function() {
         }
     });
 
-    controls_rotate.onChange(function(value) {
+    controlsRotate.onChange(function(value) {
         orbitControls.autoRotate = value;
     });
 
@@ -349,9 +355,7 @@ window.onload = function() {
         if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing); }
         FrameId = 2;
         fizzyText.play = true;
-        while (scene.getObjectByName("point") !== undefined) {
-            scene.remove(scene.getObjectByName("point"));
-        }
+        remove_points_from_scene()
         scene.remove(scene.getObjectByName("poly"));
 
         if (value === "online") {
@@ -377,17 +381,14 @@ window.onload = function() {
         }
         FrameId = 2;
         fizzyText.play = true;
-        while (scene.getObjectByName("point") !== undefined) {
-            let selectedObject = scene.getObjectByName("point");
-            scene.remove(selectedObject);
-        }
+        remove_points_from_scene()
         arrayOfPoints = [];
 
         data = fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing);
 
         let elmnt = document.getElementById("preloader");
         elmnt.remove();
-    }
+    };
 
     controlsChooser.onChange(function(value) {
         let node = document.createElement("div");
@@ -430,11 +431,7 @@ window.onload = function() {
         }
     }
 
-    let tmp = init();
-    let scene = tmp[0];
-    let renderer = tmp[1];
-    let camera = tmp[2];
-    let orbitControls = tmp[3];
+    init();
 
     // run game loop (update, render, repeat)
 
@@ -458,10 +455,7 @@ window.onload = function() {
             if (status) {
                 console.log("done");
                 // newFrame = true;
-                while (scene.getObjectByName("point") !== undefined) {
-                    let selectedObject = scene.getObjectByName("point");
-                    scene.remove(selectedObject);
-                }
+                remove_points_from_scene()
                 scene.remove(scene.getObjectByName("poly"));
                 arrayOfPoints = [];
 
@@ -474,10 +468,7 @@ window.onload = function() {
                 direction = 1;
                 fizzyText.play = true;
                 arrayOfPoints = [];
-                while (scene.getObjectByName("point") !== undefined) {
-                    let selectedObject = scene.getObjectByName("point");
-                    scene.remove(selectedObject);
-                }
+                remove_points_from_scene()
             }
             if (FrameId >= data.length - 1) {
                 direction = -1;
