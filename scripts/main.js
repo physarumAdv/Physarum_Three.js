@@ -6,7 +6,7 @@ import { OBJLoader } from "../lib/OBJLoader.js";
 import { FlyControls } from "../lib/FlyControls.js";
 
 
-let scene, orbitControls, camera, renderer, gui;
+let scene, orbitControls, camera, renderer, gui, poly_loaded = false;
 
 /**
  * Sends a request to the url and returns parsed response
@@ -76,7 +76,7 @@ function refreshArrayOfPoints(fizzyText, arrayOfPoints) {
 /*
  *Given points coordinates (frame) scene, and RGB color, adds all particles to a scene
  */
-function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
+function renderPoints(frame, fizzyText, arrayOfPoints) {
     let color = new THREE.Color("rgb(" + Math.round(fizzyText.color[0]) + "," + Math.round(fizzyText.color[1]) + "," + Math.round(fizzyText.color[2]) + ")");
     let geometry = new THREE.SphereGeometry(window.default_size, 10, 10);
     let material = new THREE.MeshBasicMaterial({color, wireframe: false});
@@ -87,6 +87,7 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
             arrayOfPoints[i].position.y = frame["y"][i] * 2;
             arrayOfPoints[i].position.z = frame["z"][i] * 2;
         } else {
+            // Create new point
             let point = new THREE.Mesh(geometry, material);
             point.scale.set(fizzyText.pointWidth, fizzyText.pointWidth, fizzyText.pointWidth);
 
@@ -103,35 +104,29 @@ function renderPoints(frame, scene, fizzyText, arrayOfPoints) {
         scene.remove(arrayOfPoints[j]);
     }
     arrayOfPoints.splice(frame["x"].length, arrayOfPoints.length);
+
+    return arrayOfPoints;
 }
 
 
 function addPolyhedron(scene, data) {
-    if (data == undefined) {
-        var verticesOfCube = [
-            // Default cube
-            new THREE.Vector3(-1,-1,-1,),
-            new THREE.Vector3(1,-1,-1),
-            new THREE.Vector3(1, 1,-1),
-            new THREE.Vector3(-1, 1,-1),
-            new THREE.Vector3(-1,-1, 1),
-            new THREE.Vector3(1,-1, 1),
-            new THREE.Vector3(1, 1, 1),
-            new THREE.Vector3(-1, 1, 1)
-        ];
-    } else {
-        var verticesOfCube = [];
+    let verticesOfCube = [];
+    if (data !== undefined) {
+        poly_loaded = true;
+
         for (let vert of data) {
             verticesOfCube.push(new THREE.Vector3(vert[0], vert[1], vert[2]))
         }
+
+        let geometry = new ConvexGeometry(verticesOfCube);
+        let material = new THREE.MeshPhongMaterial({color: 0x0066CC});
+        let mesh = new THREE.Mesh(geometry, material);
+        mesh.name = "poly";
+
+        scene.add(mesh);
+    } else {
+        poly_loaded = false;
     }
-
-    let geometry = new ConvexGeometry(verticesOfCube);
-    let material = new THREE.MeshPhongMaterial({color: 0x0066CC});
-    let mesh = new THREE.Mesh(geometry, material);
-    mesh.name = "poly";
-
-    scene.add(mesh);
 }
 
 
@@ -162,7 +157,8 @@ function init() {
         camera.updateProjectionMatrix();
     });
 
-    addPolyhedron(scene, undefined);
+    addPolyhedron(scene, [[-1,-1,-1], [1,-1,-1], [1, 1,-1], [-1, 1,-1], [-1,-1, 1],
+        [1,-1, 1], [1, 1, 1], [-1, 1, 1]]);
 
     // const loader = new OBJLoader();
     // loader.load(
@@ -305,7 +301,7 @@ window.onload = function() {
 
 
     let download = function() {
-        while (!httpGet("/get_render_status")["status"][parseInt(userId)]) {
+        while (!httpGet("/get_render_status")["status"][parseInt(userId, 10)]) {
             console.log("Working");
         }
         console.log("Done!");
@@ -355,11 +351,12 @@ window.onload = function() {
         if (value === "offline") { data = fileGet("lib/saves/" + fizzyText.currentSave + ".json", FilesMissing); }
         FrameId = 2;
         fizzyText.play = true;
+        poly_loaded = false;
         remove_points_from_scene()
         scene.remove(scene.getObjectByName("poly"));
 
         if (value === "online") {
-	    playback.close();
+	        playback.close();
             let obj = httpGet("/get_poly");
             if (obj.length === 0) {
                 console.log("No Polyhedron data. Run simulator process or contact admins.");
@@ -367,7 +364,7 @@ window.onload = function() {
                 addPolyhedron(scene, httpGet("/get_poly"));
             }
         } else {
-	    playback.open();
+	        playback.open();
             addPolyhedron(scene, undefined);
         }
 
@@ -433,7 +430,7 @@ window.onload = function() {
 
     init();
 
-    // run game loop (update, render, repeat)
+    // Run game loop (update, render, repeat)
 
     data = fileGet("/lib/saves/" + fizzyText.currentSave + ".json", FilesMissing);
 
@@ -449,19 +446,16 @@ window.onload = function() {
             if (status && data.length !== 0) {
                 // New frame received from simulator
                 fizzyText.numParticles = data["x"].length;
-                renderPoints(data, scene, fizzyText, arrayOfPoints);
+                arrayOfPoints = renderPoints(data, fizzyText, arrayOfPoints);
             }
 
             if (status) {
-                console.log("done");
-                // newFrame = true;
-                remove_points_from_scene()
-                scene.remove(scene.getObjectByName("poly"));
-                arrayOfPoints = [];
+                newFrame = true;
 
-                addPolyhedron(scene, httpGet("/get_poly"));
+                if (!poly_loaded) {
+                    addPolyhedron(scene, httpGet("/get_poly")) ;
+                }
             }
-
         } else {
 
             if (Math.round(FrameId) < 1) {
@@ -481,16 +475,18 @@ window.onload = function() {
 
             if (data.length - 1 > Math.round(FrameId) && Math.round(FrameId) >= 1) {
                 fizzyText.numParticles = data[Math.round(FrameId)]["x"].length;
-                renderPoints(data[Math.round(FrameId)], scene, fizzyText, arrayOfPoints);
+                arrayOfPoints = renderPoints(data[Math.round(FrameId)], fizzyText, arrayOfPoints);
             }
         }
 
         renderer.render(scene, camera);
 
-        if (fizzyText.dorender && fizzyText.play && newFrame) {
+        if ((fizzyText.mode === "offline" && fizzyText.dorender && fizzyText.play)
+            || (fizzyText.mode === "online" && fizzyText.dorender && newFrame)) {
+            // Capture currect screen and send to server
             let image = renderer.domElement.toDataURL("image/png", 1);
             httpSend("/add_render", {"img": image, "user": userId, "update": false});
-            // newFrame = false;
+            newFrame = false;
         }
 
         stats.end();

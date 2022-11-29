@@ -4,3 +4,4 @@ lib/renders/
 lib/movies/
 C:UsersUsernodejsnpm-cache/
 .idea/
+config.json

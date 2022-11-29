@@ -211,6 +211,7 @@ function main(req, res) {
     }
 }
 
+let config = JSON.parse(fs.readFileSync('config.json'));
 let app = http.createServer(main);
-app.listen(8080);
-console.log("Listening on 8080");
+app.listen(config["port"]);
+console.log("Listening on " + config["port"]);
