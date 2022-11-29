@@ -1,4 +1,7 @@
 node_modules/
 lib/saves/
+lib/renders/
+lib/movies/
 C:UsersUsernodejsnpm-cache/
 .idea/
+config.json

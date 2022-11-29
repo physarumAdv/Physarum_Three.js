@@ -1,0 +1,33 @@
+{
+  "name": "physarum_polycephalum_visualizer",
+  "version": "1.0.0",
+  "description": "The web site and Node.js server for visualizing Physarum on WebGl",
+  "main": "main_server.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "node main_server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/physarumAdv/Physarum_webGL.git"
+  },
+  "keywords": [
+    "Physarum",
+    "WebGl",
+    "ThreeJs",
+    "Visualizer"
+  ],
+  "author": "Pavel Artushkov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/physarumAdv/Physarum_webGL/issues"
+  },
+  "homepage": "https://github.com/physarumAdv/Physarum_webGL#readme",
+  "dependencies": {
+    "downloadjs": "^1.4.7",
+    "fs-extra": "^10.1.0",
+    "node-static": "^0.7.11"
+  }
+}
